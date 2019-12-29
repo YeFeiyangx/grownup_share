@@ -1,2 +1,2 @@
-# growup_share
-share when learning
+# grownup_share
+learn and shere
