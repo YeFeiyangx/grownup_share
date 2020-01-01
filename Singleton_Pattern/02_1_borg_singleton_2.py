@@ -1,10 +1,23 @@
 __author__ = ['Chetan',"IvanYoung"]
 #%%
 """
+懒汉模式
+
+采用__new__方法 any
+ctrl+左键 点new看源码
+但是，元类编程 type:-> *arg -> name[类目],base[基类],attrs[内属性] !
+
 创建不同空间的内存对象，但是内部是同一内存地址的动态数据类型(dict)
-_shared_state = {}
+
+先通过继承的方式，获取原类属性；
+调用类的__dict__，共享类属性cls._shared_state；
+返回继承的原类
+
+P.S. 通过obj.__dict__ = cls._shared_state共享内存地址
+即每个实例的Borg的__dict__是同一地址，但是实例却不是！
+
 obj.__dict__ = cls._shared_state
-单例模式，主要是为了共享所有该类的属性数据。可以想象未全局变量
+单例模式的一种，主要是为了共享所有该类的属性数据。可以想象为全局变量
 """
 
 class Borg(object):
@@ -17,27 +30,25 @@ class Borg(object):
 b = Borg()
 b1 = Borg()
 b.x = 4
-
+print(dir(Borg))
+print(dir(b))
 print("Borg Object 'b': ", b)  ## b and b1 are distinct objects
 print("Borg Object 'b1': ", b1)
 print("Object State 'b':", b.__dict__) ## b and b1 share same state
 print("Object State 'b1':", b1.__dict__)
+print("Object State id'b1':", id(b.__dict__)) ## b and b1 share same state
+print("Object State id'b1':", id(b1.__dict__))
 
 #%%
 class Borg(object):
     _shared_state = {}
-    # def __init__(self, a, b):
-    #   print("__init__")
-    #   print("a:",a)
-    #   print("b:",b)
-  
-    def __new__(cls, a, b):
-        cls.a = a
-        cls.b = b
-        obj = super().__new__(cls)
+    def __new__(cls, a, b, *arg, **kwargs):         # def __new__(cls, a, b):
+        obj = super().__new__(cls,*arg,**kwargs)    # obj = super().__new__(cls) 
         obj.__dict__ = cls._shared_state
+        obj.__dict__["a"] = a
+        obj.__dict__["b"] = b
         return obj
- 
+
 b = Borg(5,6)
 b1 = Borg(7,8)
 b.x = 4

@@ -3,7 +3,9 @@ __author__ = ['Chetan',"IvanYoung"]
 """
 用VSCODE可以获得更好的调试体验
 VSCODE-Python套装见#TODO
-用__new__方法创建同一个内存空间的不同名称的实例化对象
+用__new__和if not hasattr(cls, 'instance')方法 \
+创建同一个内存空间的不同名称的实例化对象
+这个是对于单个类属性继承而言的，拓展性差，仅供理解
 """
 class Singleton(object):
     ## __new__方法优先级大于__init__,创建一个类的类实例化对象，返回给Singleton
@@ -13,11 +15,13 @@ class Singleton(object):
         if not hasattr(cls, 'instance'):
             # cls.instance = super(Singleton, cls).__new__(cls) -> python 2.X +
             cls.instance = super().__new__(cls)     # python -> 3.X +
+        # 造成实例化的对象 指向该类本身，同时具有该实例化对象属性具有instance属性，\
+        # 也指向本身
         return cls.instance
 
 s = Singleton()
 print("Object created", s)
-
+print(s.instance)
 s1 = Singleton()
 print("Object created", s1)
 
