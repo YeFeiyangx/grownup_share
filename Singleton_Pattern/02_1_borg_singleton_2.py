@@ -3,7 +3,7 @@ __author__ = ['Chetan',"IvanYoung"]
 """
 懒汉模式
 
-采用__new__方法 any
+类采用 __new__ 方法 input: -> any
 ctrl+左键 点new看源码
 但是，元类编程 type:-> *arg -> name[类目],base[基类],attrs[内属性] !
 
@@ -60,69 +60,101 @@ print(dir(b))
 
 #%%
 ## 嘿嘿嘿顺路看下去就通透了
-class Borg(int):
+print("==="*5+"step1"+"==="*5)
+class Borg(object):
     _shared_state = {}
-    def __init__(self, a, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         for i in args:
-            print(i)
-    def __new__(cls, a, *args, **kwargs):
-        obj = super().__new__(cls, a, *args, **kwargs)
+            print("__init__:",i)
+    def __new__(cls, *args, **kwargs):
+        print("cls:",cls)
+        obj = super().__new__(cls)
         obj.__dict__ = cls._shared_state ## 起到共享的主要语句
+        for i in args:
+            obj.__dict__[str(i)] = i     ## dir会读取__dict__,这东西里头不能有数值类型的数据哈！
+        for i,j in kwargs:
+            obj.__dict__[i] = j
         return obj
     def testSysStep(self, var_a, var_b):
         self.total = var_a + var_b
-        print(self.total)
+        print("testSysStep:",self.total)
 
-b = Borg(5)
+b = Borg(5,7,8)
 b1 = Borg(6)
 b.testSysStep(6,60)
 b1.testSysStep(8,80)
 b.x = 4
-print("dir(b):",dir(b))
+"""
+'bit_length', 'conjugate', 'denominator', 'from_bytes', 'imag', 
+'numerator', 'real', 'testSysStep', 'to_bytes', 'total', 'x'
+"""
+print("Borg:",dir(Borg))
+print("dir(b):", dir(b))
+
 print("Borg Int 'b': ", b)  ## b and b1 are distinct objects
-# Borg Int 'b':  5
 print("Borg Int 'b1': ", b1)
-# Borg Int 'b1':  6
 
 print("Object State 'b':", b.__dict__) ## b and b1 share same state
-# Object State 'b': {'x': 4}
+# {'5': 5, '7': 7, '8': 8, '6': 6, 'total': 88, 'x': 4}
 print("Object State 'b1':", b1.__dict__)
-# Object State 'b1': {'x': 4}
-
-print("==*=="*10)
-"""
-object和int差在一些类方法的继承上
-"""
-class Borg(object):
-    _shared_state = {}
-    def __init__(self, a, *args, **kwargs):
-        print("a:",a)
-        self.a = a
-        for i in args:
-            print(i)
-    def __new__(cls, a, *args, **kwargs):
-        obj = super().__new__(cls, *args, **kwargs)
-        obj.__dict__ = cls._shared_state
-        return obj
-
-b = Borg(5)
-b1 = Borg(6)
-b.x = 4
-
-print("Borg Object 'b': ", b)  ## b and b1 are distinct objects
-# Borg Object 'b':  <__main__.Borg object at 0x000002317A152EF0>
-print("Borg Object 'b1': ", b1)
-# Borg Object 'b1':  <__main__.Borg object at 0x000002317B54DD68>
-
-print("Object State 'b':", b.__dict__) ## b and b1 share same state
-# Object State 'b': {'x': 4}
-print("Object State 'b1':", b1.__dict__)
-# Object State 'b1': {'x': 4}
+# {'5': 5, '7': 7, '8': 8, '6': 6, 'total': 88, 'x': 4}
 
 #%%
 """
-是他是她就是它，把介个玩意搞定啦，啦啦啦。
+观察__new__中的arg和kwargs
+
 """
+print("==="*5+"step2"+"==="*5)
+class Borg(object):
+    _shared_state = {}
+    # def __init__(self, a, *args, **kwargs):
+    def __init__(self, a):
+        print("a:",a)
+        self.a = a
+    def __new__(cls, a, *args, **kwargs):
+        print("=====args:",args)
+        print("=====kwargs:",kwargs)
+        obj = super().__new__(cls, *args, **kwargs)
+        obj.__dict__ = cls._shared_state
+        obj.__dict__[str(a)] = a
+        return obj
+
+b = Borg(5)
+
+#%%
+"""
+采用cls.var = value的方式 和 setattr(cls,"var",value的方式)  -> 进dir不进__dict__
+与obj.__dict__[var] = value的区别                           -> 都进
+
+"""
+print("==="*5+"step3"+"==="*5)
+class Borg(object):
+    _shared_state = {}
+    def __new__(cls, x):
+        cls.a = x # "a"直接进入dir
+                  # setattr(cls,"a",x) 这个要这样
+                  # 不进入__dict__
+        setattr(cls,"aa",x)
+        print("test=====",dir(cls))
+        obj = super().__new__(cls)
+        obj.__dict__ = cls._shared_state
+        obj.__dict__["aaa"] = x ## 进入__dict__
+        return obj
+
+b = Borg(5)
+b.x = 4
+
+print("dir(b):",dir(b))
+print(" b.__dict__:", b.__dict__)
+print("Borg Object 'b': ", b)
+print("b.a",b.a)
+
+
+#%%
+"""
+以**kwargs巩固
+"""
+print("==="*5+"step4"+"==="*5)
 class Borg(object):
     _shared_state = {}
     def __init__(self, *args, **kwargs):
@@ -140,40 +172,12 @@ class Borg(object):
         return obj
 
 b = Borg(a = 3)
-b1 = Borg(c = 5)
 b.x = 4
 
 print(b)
-print(b1)
 print("dir(b):",dir(b),"\n", b.c)
-print("dir(b1):",dir(b1),"\n", b.a)
-
 
 # %%
-class Borg(object):
-    _shared_state = {}
-    def __new__(cls, x):
-        cls.a = x
-        print(x)
-        obj = super().__new__(cls)
-        obj.__dict__ = cls._shared_state
-        return obj
-
-b = Borg(5)
-b1 = Borg(6)
-b.x = 4
-
-print("dir(b):",dir(b))
-print("dir(b):",dir(b1))
-print("Borg Object 'b': ", b)             ## 5
-print("Borg Object 'b1': ", b1)           ## 6
-print("Object State 'b':", b.__dict__)    ## Object State 'b': {'x': 4}
-print("Object State 'b1':", b1.__dict__)  ## Object State 'b1': {'x': 4}
-print("b.a",b.a)
-print("b1.a",b1.a)
-
-# %%
-
 class CapStr(str):
     def __new__(cls,string):
         if isinstance(string, str):
@@ -204,16 +208,6 @@ class CapStr2(str):
 c = CapStr2(1)
 print(type(c),c)          # <class '__main__.CapStr2'> Not Str Type!
 print(c.strings)          # 1
-
-
-# %%
-class TestPrivate:
-    def __init__(self):
-        self.__testattr = "nihao"
-
-a = TestPrivate()
-a._TestPrivate__testattr
-
 
 
 # %%
