@@ -178,6 +178,11 @@ print(b)
 print("dir(b):",dir(b),"\n", b.c)
 
 # %%
+"""
+__new__方法延申
+class 中传入str，实例化对象就可以和str进行打印
+"""
+print("==="*5+"step5"+"==="*5)
 class CapStr(str):
     def __new__(cls,string):
         if isinstance(string, str):
@@ -204,8 +209,9 @@ class CapStr2(str):
         return super().__new__(cls,string2)
     def __init__(self, a):
         self.strings = a
-        print(self.strings) # 1
+        print("__init__:",self.strings) # 1
 c = CapStr2(1)
+print(dir(c))
 print(type(c),c)          # <class '__main__.CapStr2'> Not Str Type!
 print(c.strings)          # 1
 
