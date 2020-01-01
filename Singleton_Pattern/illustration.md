@@ -22,4 +22,8 @@ Reference:
 
 >\_\_setattr\_\_
 
-## 
+## 涉及特殊概念
+
+>数据描述符，元（metaclass）
+
+>[元编程]<#todo 补充链接>

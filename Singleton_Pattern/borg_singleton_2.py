@@ -1,4 +1,4 @@
-__author__ = 'Chetan'
+__author__ = ['Chetan',"IvanYoung"]
 #%%
 """
 创建不同空间的内存对象，但是内部是同一内存地址的动态数据类型(dict)
@@ -8,11 +8,11 @@ obj.__dict__ = cls._shared_state
 """
 
 class Borg(object):
-     _shared_state = {}
-     def __new__(cls, *args, **kwargs):
-       obj = super().__new__(cls, *args, **kwargs)
-       obj.__dict__ = cls._shared_state
-       return obj
+    _shared_state = {}
+    def __new__(cls, *args, **kwargs):
+        obj = super().__new__(cls, *args, **kwargs)
+        obj.__dict__ = cls._shared_state
+        return obj
 
 b = Borg()
 b1 = Borg()
@@ -25,19 +25,19 @@ print("Object State 'b1':", b1.__dict__)
 
 #%%
 class Borg(object):
-  _shared_state = {}
-  # def __init__(self, a, b):
-  #   print("__init__")
-  #   print("a:",a)
-  #   print("b:",b)
-
-  def __new__(cls, a, b):
-    cls.a = a
-    cls.b = b
-    obj = super().__new__(cls)
-    obj.__dict__ = cls._shared_state
-    return obj
-
+    _shared_state = {}
+    # def __init__(self, a, b):
+    #   print("__init__")
+    #   print("a:",a)
+    #   print("b:",b)
+  
+    def __new__(cls, a, b):
+        cls.a = a
+        cls.b = b
+        obj = super().__new__(cls)
+        obj.__dict__ = cls._shared_state
+        return obj
+ 
 b = Borg(5,6)
 b1 = Borg(7,8)
 b.x = 4
@@ -50,17 +50,17 @@ print(dir(b))
 #%%
 ## 嘿嘿嘿顺路看下去就通透了
 class Borg(int):
-  _shared_state = {}
-  def __init__(self, a, *args, **kwargs):
-    for i in args:
-      print(i)
-  def __new__(cls, a, *args, **kwargs):
-    obj = super().__new__(cls, a, *args, **kwargs)
-    obj.__dict__ = cls._shared_state ## 起到共享的主要语句
-    return obj
-  def testSysStep(self, var_a, var_b):
-    self.total = var_a + var_b
-    print(self.total)
+    _shared_state = {}
+    def __init__(self, a, *args, **kwargs):
+        for i in args:
+            print(i)
+    def __new__(cls, a, *args, **kwargs):
+        obj = super().__new__(cls, a, *args, **kwargs)
+        obj.__dict__ = cls._shared_state ## 起到共享的主要语句
+        return obj
+    def testSysStep(self, var_a, var_b):
+        self.total = var_a + var_b
+        print(self.total)
 
 b = Borg(5)
 b1 = Borg(6)
@@ -83,16 +83,16 @@ print("==*=="*10)
 object和int差在一些类方法的继承上
 """
 class Borg(object):
-  _shared_state = {}
-  def __init__(self, a, *args, **kwargs):
-    print("a:",a)
-    self.a = a
-    for i in args:
-      print(i)
-  def __new__(cls, a, *args, **kwargs):
-    obj = super().__new__(cls, *args, **kwargs)
-    obj.__dict__ = cls._shared_state
-    return obj
+    _shared_state = {}
+    def __init__(self, a, *args, **kwargs):
+        print("a:",a)
+        self.a = a
+        for i in args:
+            print(i)
+    def __new__(cls, a, *args, **kwargs):
+        obj = super().__new__(cls, *args, **kwargs)
+        obj.__dict__ = cls._shared_state
+        return obj
 
 b = Borg(5)
 b1 = Borg(6)
@@ -113,20 +113,20 @@ print("Object State 'b1':", b1.__dict__)
 是他是她就是它，把介个玩意搞定啦，啦啦啦。
 """
 class Borg(object):
-  _shared_state = {}
-  def __init__(self, *args, **kwargs):
-    pass
-  def __new__(cls, *args, **kwargs):
+    _shared_state = {}
+    def __init__(self, *args, **kwargs):
+        pass
+    def __new__(cls, *args, **kwargs):
 
-    for i in args:
-      setattr(cls, str(i), args[i])
+        for i in args:
+            setattr(cls, str(i), args[i])
 
-    for i,j in kwargs.items():
-      setattr(cls, i, j)
+        for i,j in kwargs.items():
+            setattr(cls, i, j)
 
-    obj = super().__new__(cls)
-    obj.__dict__ = cls._shared_state
-    return obj
+        obj = super().__new__(cls)
+        obj.__dict__ = cls._shared_state
+        return obj
 
 b = Borg(a = 3)
 b1 = Borg(c = 5)
@@ -140,13 +140,13 @@ print("dir(b1):",dir(b1),"\n", b.a)
 
 # %%
 class Borg(object):
-     _shared_state = {}
-     def __new__(cls, x):
-       cls.a = x
-       print(x)
-       obj = super().__new__(cls)
-       obj.__dict__ = cls._shared_state
-       return obj
+    _shared_state = {}
+    def __new__(cls, x):
+        cls.a = x
+        print(x)
+        obj = super().__new__(cls)
+        obj.__dict__ = cls._shared_state
+        return obj
 
 b = Borg(5)
 b1 = Borg(6)
@@ -165,11 +165,11 @@ print("b1.a",b1.a)
 
 class CapStr(str):
     def __new__(cls,string):
-      if isinstance(string, str):
-        string2 = string.upper()
-      else:
-        string2 = "Not Str Type!"
-      return super().__new__(cls,string2)
+        if isinstance(string, str):
+            string2 = string.upper()
+        else:
+            string2 = "Not Str Type!"
+        return super().__new__(cls,string2)
  
 a = CapStr("I love China!")
 
@@ -182,14 +182,14 @@ print("===="*10)
 
 class CapStr2(str):
     def __new__(cls,string):
-      if isinstance(string, str):
-        string2 = string.upper()
-      else:
-        string2 = "Not Str Type!"
-      return super().__new__(cls,string2)
+        if isinstance(string, str):
+            string2 = string.upper()
+        else:
+            string2 = "Not Str Type!"
+        return super().__new__(cls,string2)
     def __init__(self, a):
-      self.strings = a
-      print(self.strings) # 1
+        self.strings = a
+        print(self.strings) # 1
 c = CapStr2(1)
 print(type(c),c)          # <class '__main__.CapStr2'> Not Str Type!
 print(c.strings)          # 1
@@ -197,8 +197,8 @@ print(c.strings)          # 1
 
 # %%
 class TestPrivate:
-  def __init__(self):
-    self.__testattr = "nihao"
+    def __init__(self):
+        self.__testattr = "nihao"
 
 a = TestPrivate()
 a._TestPrivate__testattr
