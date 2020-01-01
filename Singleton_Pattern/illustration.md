@@ -26,4 +26,4 @@ Reference:
 
 >数据描述符，元（metaclass）
 
->[元编程]<#todo 补充链接>
+>[元编程]<https://www.jianshu.com/p/5890ccc16ae7>
