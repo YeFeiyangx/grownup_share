@@ -23,7 +23,7 @@ class int(metaclass=MyInt):
         self.x = x                                              # 7
         self.y = y                                              # 8
 
-## __call__方法直接付给类，而不是实例
+## 元类编程中__call__方法直接付给类，而不是实例，所以运行类实例化的时候，__call__触发
 i = int(4,5)                                                    # 1 # 10
 
 #%%
@@ -40,10 +40,11 @@ class TestFun:
 
     def __call__(self,*args):
         print("__call__:",args)
-        return "why here?"  ## 如果__init__中有func，且return该func,就能成为装饰器
+        # return "why here?"  ## 如果__init__中有func，且return该func,就能成为装饰器
+        return self.__init__(*args)
 
 a = TestFun(4)
-print(a(4))
+a(4)
 
 #%%
 class MyInt(type):
