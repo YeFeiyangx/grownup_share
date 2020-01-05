@@ -1,7 +1,12 @@
 __author__ = 'Chetan'
 from abc import ABCMeta, abstractmethod
+"""
+工厂模式
 
+[抽象类方法]<https://www.cnblogs.com/baxianhua/p/10876181.html>
 
+含抽象类方法的不能实例化
+"""
 class PizzaFactory(metaclass=ABCMeta):
     
     @abstractmethod
