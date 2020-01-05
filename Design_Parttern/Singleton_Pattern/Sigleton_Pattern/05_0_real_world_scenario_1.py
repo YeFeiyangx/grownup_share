@@ -1,6 +1,11 @@
-__author__ = 'Chetan'
+__author__ = ['Chetan',"IvanYoung"]
 
-import sqlite3
+#%%
+import sqlite3 # anaconda 3.7python么有sqlite3
+
+# [解决方案]<https://blog.csdn.net/frostime/article/details/86762858>
+
+# [sqlite3略读]<https://blog.csdn.net/sinat_35886587/article/details/80561959>
 
 class MetaSingleton(type):
     
@@ -16,12 +21,15 @@ class Database(metaclass=MetaSingleton):
     def connect(self):
         if self.connection is None:
             self.connection = sqlite3.connect("db.sqlite3")
-            self.cursorobj = self.connection.cursor()
+            self.cursorobj = self.connection.cursor()           # 建立游标，开启操作
         return self.cursorobj
 
 db1 = Database().connect()
 db2 = Database().connect()
 
+## 链接同一个数据库
 print ("Database Objects DB1", db1)
 print ("Database Objects DB2", db2)
+
+
 

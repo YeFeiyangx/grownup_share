@@ -1,4 +1,5 @@
-__author__ = 'Chetan'
+__author__ = ['Chetan',"IvanYoung"]
+
 #%%
 """
 元编程中的懒汉模式
