@@ -44,55 +44,40 @@ class TestFun:
         return self.__init__(*args)
 
 a = TestFun(4)
-a(4)
+a(4) # -> __init__方法无return（过程中会执行中的print），最后返回None
+print(a(4)) # -> None
 
 #%%
-class MyInt(type):
-    def __new__(cls, name,bases,attrs, **kwds):
-        print("***** Here's My name *****", name)
-        print("***** Here's My bases *****", bases)
-        print("***** Here's My attrs *****", attrs)
-        print("***** Here's My kwds *****", kwds)
-        print("Now do whatever you want with these objects...")
-        return type.__new__(cls, name, bases, attrs, **kwds)
+"""
+属性描述符案例
+[__get__,__set__]<https://blog.csdn.net/sjyttkl/article/details/80655421>
+"""
+class RevealAccess:
+    def __init__(self,initval = None,name='var'):
+        self.val = initval
+        self.name = name
 
-def testfunc():
-    pass
+    def __get__(self, instance, owner):
+        print("获取..",self.name)
+        return self.val
 
-class testclass:
-    def __init__(self, x, y):
-        self._value = None
-        self.col1 = x
-        self.col2 = y
-        print("====self.col1====:",self.col1)
-        print("====self.col2====:",self.col2)
+    def __set__(self, instance, value):
+        print("设置值：",self.name)
+        self.val = value
 
-    def __get__(self,instance,owner):
-        print("self._value",self._value)
-        return self._value
-    def __set__(self,instance,value):
-        print("instance:", instance)
-        self._value = value
+class MyClass:
+    x = RevealAccess(10,"var 'x'") # 开始的时候set self.name和默认value
+    y = 5
 
-## metaclass 创建类实例
-class int(metaclass=MyInt):
-    test = testfunc()
-    test1 = testclass(x=1,y=2)
-    def __init__(self, x, y,z=None):
-        self.x = x
-        self.y = y
-        self.z = z
-        print("self.__dict__:", self.__dict__)
-        print("int.__dict__:", int.__dict__)
-        print(help(int.__dict__["__init__"]))
-        print(help(type(self)))
-        print(int.__dict__["__dict__"])
-        print(int.__dict__["__weakref__"])
-
-i = int(4,5, z=6)
-print(dir(i))
-# ***** Here's My int ***** (4, 5)
-# Now do whatever you want with these objects...
+    def __init__(self):
+       self.x = 'self x'
+        # pass
+m = MyClass()   ## 实例化的时候，进入self.x触发 -> set方法 -> 默认self.val设置为str"self x"
+print(m.x)      ## __get__方法获取
+print("-----------------")
+m1 = MyClass()
+m1.x = 20       ## __set__方法设置
+print(m1.x)     ## __get__方法获取
 
 
 # %%
@@ -117,7 +102,6 @@ for i in range(10):
     foo()
 
 print(foo.count)  # 10
-
 
 
 # %%
