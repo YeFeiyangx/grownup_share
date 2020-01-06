@@ -6,7 +6,7 @@ Reference:
 ## 主要作用
 >[菜鸟教程]<https://www.runoob.com/design-pattern/singleton-pattern.html>
 
->延伸：
+>延伸：属于**创建型设计模式**
 
 >在Python中，该实例对象与动态数据类型类似-无论将指定**动态数据类型**的地址分配给哪个对象，其对应的都是**同一个内存地址**，任一对象修改，其它对象都会将修改结果同步。
 
