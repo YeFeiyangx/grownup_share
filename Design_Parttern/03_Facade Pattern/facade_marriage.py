@@ -1,7 +1,13 @@
 __author__ = ['Chetan',"IvanYoung"]
 
+"""
+组合各类子系统
+"""
+
 class Hotelier(object):
-    
+    """
+    子系统，订酒店
+    """
     def __init__(self):
         print("Arranging the Hotel for Marriage? --")
     
@@ -15,7 +21,9 @@ class Hotelier(object):
 
 
 class Florist(object):
-    
+    """
+    子系统，订花
+    """
     def __init__(self):
         print("Flower Decorations for the Event? --")
     
@@ -24,7 +32,9 @@ class Florist(object):
 
 
 class Caterer(object):
-    
+    """
+    子系统，订饭
+    """
     def __init__(self):
         print("Food Arrangements for the Event --")
     
@@ -32,7 +42,9 @@ class Caterer(object):
         print("Chinese & Continental Cuisine to be served\n\n")
 
 class Musician(object):
-    
+    """
+    子系统，订乐队
+    """
     def __init__(self):
         print("Musical Arrangements for the Marriage --")
     
@@ -41,7 +53,9 @@ class Musician(object):
 
 
 class EventManager(object):
-    
+    """
+    门面
+    """
     def __init__(self):
         print("Event Manager:: Let me talk to the folks\n")
     
@@ -60,7 +74,9 @@ class EventManager(object):
 
 
 class You(object):
-    
+    """
+    客户端，执行操作
+    """
     def __init__(self):
         print("You:: Whoa! Marriage Arrangements??!!!")
     
