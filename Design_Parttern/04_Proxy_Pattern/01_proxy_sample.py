@@ -1,7 +1,9 @@
 __author__ = 'Chetan'
 
 class Actor(object):
-    
+    """
+    代理，杨元
+    """
     def __init__(self):
         self.isBusy = False
     
@@ -17,7 +19,9 @@ class Actor(object):
         return self.isBusy
 
 class Agent(object):
-    
+    """
+    代理，经纪人
+    """
     def __init__(self):
         self.principal = None
     
