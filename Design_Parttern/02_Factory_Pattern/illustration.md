@@ -22,3 +22,7 @@ Reference:
 >abstractmethod -> 装饰器，用于抽象方法
 
 >[抽象模块abc]<https://blog.csdn.net/weixin_34365635/article/details/94569022>
+
+## 涉及特殊用法
+
+>[setattr]<https://github.com/YeFeiyangx/grownup_share/blob/master/Design_Parttern/02_Factory_Pattern/02_factory_method.py>可设置函数

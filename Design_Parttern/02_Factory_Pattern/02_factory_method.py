@@ -78,7 +78,7 @@ class linkedin(Profile):
         for i in self.sections:
             setattr(self, i, eval(i)().describe) # 直接获得实例产品的方法 -> -> profile.PersonalSection()
             # setattr(self, i, eval(i))              # 获得实例产品的方法 -> profile.PersonalSection().describe()
-            # setattr(self, i, eval(i))              # 获得实例产品的方法 -> profile.PersonalSection.describe()
+            # setattr(self, i, eval(i)())              # 获得实例产品的方法 -> profile.PersonalSection.describe()
 
 class facebook(Profile):
     """

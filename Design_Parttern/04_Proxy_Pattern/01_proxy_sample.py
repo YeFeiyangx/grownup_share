@@ -1,8 +1,8 @@
-__author__ = 'Chetan'
+__author__ = ['Chetan',"IvanYoung"]
 
 class Actor(object):
     """
-    代理，杨元
+    代理，演员
     """
     def __init__(self):
         self.isBusy = False

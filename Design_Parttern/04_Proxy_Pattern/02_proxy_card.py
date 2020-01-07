@@ -1,7 +1,9 @@
-__author__ = 'Chetan'
+__author__ = ['Chetan',"IvanYoung"]
 
 from abc import ABCMeta, abstractmethod
-
+"""
+代理模式
+"""
 class Payment(metaclass=ABCMeta):
     
     @abstractmethod
