@@ -1,5 +1,7 @@
-__author__ = 'Chetan'
-
+__author__ = ['Chetan',"IvanYoung"]
+"""
+生成不同模板方法的子类
+"""
 from abc import abstractmethod, ABCMeta
 
 class Trip(metaclass=ABCMeta):

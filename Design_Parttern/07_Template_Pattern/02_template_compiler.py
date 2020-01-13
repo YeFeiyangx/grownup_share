@@ -1,4 +1,8 @@
-__author__ = 'Chetan'
+__author__ = ['Chetan',"IvanYoung"]
+"""
+相比01，取消了客户端
+"""
+
 
 from abc import  ABCMeta, abstractmethod
 

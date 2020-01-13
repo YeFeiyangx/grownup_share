@@ -1,7 +1,8 @@
 __author__ = ['Chetan',"IvanYoung"]
 
 """
-命令模式 - 
+命令模式 含 方法名称 拥有方法的对象 方法的参数值；
+
 
 """
 from abc import ABCMeta, abstractmethod

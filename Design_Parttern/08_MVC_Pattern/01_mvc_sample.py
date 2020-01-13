@@ -1,4 +1,7 @@
-__author__ = 'Chetan'
+__author__ = ['Chetan',"IvanYoung"]
+"""
+复合模式-MVC-模型，显示，控制
+"""
 class Model(object):
     services = {
         'email': {'number': 1000, 'price': 2,},
