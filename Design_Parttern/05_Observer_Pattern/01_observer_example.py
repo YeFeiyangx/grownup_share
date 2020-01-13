@@ -1,5 +1,8 @@
 __author__ = ['Chetan',"IvanYoung"]
+"""
+观察者模式-行为型模式，主要关注对象的责任
 
+"""
 class Subject:
     """
     主题

@@ -5,7 +5,7 @@ Reference:
 
 ## 主要作用
 
->
+>模式特点"虚拟，远程"
 
 >[菜鸟教程]<https://www.runoob.com/design-pattern/proxy-pattern.html>
 
@@ -15,4 +15,4 @@ Reference:
 
 ## 涉及特殊概念
 
->
+> <__dell__> 运行后回收内存 
