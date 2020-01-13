@@ -11,6 +11,7 @@ class NewsPublisher:
     def attach(self, subscriber):
         """
         用于登记需要通知的媒体
+        在观察者中引入需要导入的主题，通过主题的方法将观察者组合进入主题的私有通知类
         """
         self.__subscribers.append(subscriber)
     
@@ -18,11 +19,16 @@ class NewsPublisher:
         return self.__subscribers.pop()
     
     def subscribers(self):
+        """
+        输出私有类中的观察者名录
+        """
         return [type(x).__name__ for x in self.__subscribers]
     
     def notifySubscribers(self):
         """
         让被登记的观察者更新新闻
+        通过主题的notify调用观察的update方法，
+        通过观察者的update方法call主题的getNews方法获取新闻
         """
         for sub in self.__subscribers:
             sub.update()
@@ -45,7 +51,7 @@ class Subscriber(metaclass=ABCMeta):
         pass
 
 
-class SMSSubscriber:
+class SMSSubscriber(Subscriber):
     
     def __init__(self, publisher): ## 互选，观察者也可以选其他主题
         """
@@ -60,7 +66,7 @@ class SMSSubscriber:
         """
         print(type(self).__name__, self.publisher.getNews())
 
-class EmailSubscriber:
+class EmailSubscriber(Subscriber):
     
     def __init__(self, publisher):
         self.publisher = publisher
@@ -69,7 +75,7 @@ class EmailSubscriber:
     def update(self):
         print(type(self).__name__, self.publisher.getNews())
 
-class AnyOtherSubscriber:
+class AnyOtherSubscriber(Subscriber):
     
     def __init__(self, publisher):
         self.publisher = publisher

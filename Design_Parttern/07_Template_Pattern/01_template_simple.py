@@ -1,8 +1,17 @@
-__author__ = 'Chetan'
+__author__ = ['Chetan',"IvanYoung"]
 
 from abc import ABCMeta, abstractmethod
 
+"""
+模板模式 - 
+
+"""
+
 class AbstractClass(metaclass=ABCMeta):
+    """
+    抽象元类，强制要求子类重写抽象元类中的方法;
+    子类强制重写操作方法1，操作方法2
+    """
     def __init__(self):
         pass
 
