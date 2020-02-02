@@ -1,3 +1,14 @@
+"""
+计算字符串最后一个单词的长度，单词以空格隔开;
+字符串中的count用法;
+求一个数的质因数分解;
+最大公约数转化为最小公倍数;
+求立方根 损失函数; Xn+1 = Xn - f(Xn)/f(Xn)';
+最长上升子序列;
+
+"""
+
+
 #%%
 # 计算字符串最后一个单词的长度，单词以空格隔开。
 input_str = input("请输入字符串,多组字符串，请用“；”隔开:  ")
@@ -23,27 +34,13 @@ b=input().lower()
 print(a.count(b))
 
 # %%
-## 使用递归
-a=int(input())
-
-def q(x):
-    iszhi=1
-    for i in range(2,int(x**0.5+2)):
-        if x%i==0:
-            iszhi=0
-            print(str(i),end=" ")
-            q(int(x/i))
-            break
-    if iszhi==1:
-        print(str(x),end=" ")
-q(a)
-
-
-# %%
-print(round(float(4.5)))
-
-# %%
-type(input())
+## 求一个数的质因数分解
+a, res = int(input()), []
+for i in range(2, a // 2 + 1):
+    while a % i == 0:
+        a = a / i
+        res.append(i)
+print(" ".join(map(str, res)) + " " if res else str(a) + " ")
 
 # %%
 # 最大公约数转化为最小公倍数 & 辗转相除法
@@ -66,40 +63,19 @@ while True:
         break
 
 #%%
-# 损失函数
-temp = input()
+# 求立方根 损失函数
+# temp = input()
+temp = 4
 a = float(temp)
 r = 0.001
 b = a
 while abs(b*b*b-a) > r:
     b = b - (b*b*b-a)/b/b/10
 print(b)
-
-
+    
 # %%
-
-#最长上升子序列
-import bisect 
-while True:
-    try:
-        b = input("enter")
-        a, b = int(b), map(int, b.split())
-        q = []
-        for v in b:
-            pos = bisect.bisect_left(q, v)
-            if pos == len(q):
-                q.append(v)
-            else:
-                q[pos] = v
-        print("len:",len(q))
- 
-    except:
-        print("a:",a)
-        print("b:",b)
-        print("q:",q)
-        break
-# %%
-#最长上升子序列
+# 最长上升子序列
+# 不停改写列表长度
 import bisect 
 while True:
     try:
@@ -115,3 +91,5 @@ while True:
  
     except:
         break
+
+#%%
