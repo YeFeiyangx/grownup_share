@@ -8,7 +8,7 @@
 
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Qt5Agg')  # Qt5Agg Agg
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
@@ -28,7 +28,7 @@ TRUE_VALUE[1:6] = np.arange(1, 6) / 6.0
 TRUE_VALUE[6] = 1
 
 ACTION_LEFT = 0
-ACTION_RIGHT = 1
+# ACTION_RIGHT = 1 # JUST TO COMPARE
 
 # @values: current states value, will be updated if @batch is False
 # @alpha: step size
@@ -44,7 +44,7 @@ def temporal_difference(values, alpha=0.1, batch=False):
         else:
             state += 1
         # Assume all rewards are 0
-        reward = 0
+        reward = -0.2
         trajectory.append(state)
         # TD update
         if not batch:
@@ -188,10 +188,10 @@ def figure_6_2():
     plt.xlabel('episodes')
     plt.ylabel('RMS error')
     plt.legend()
-
-    plt.savefig('../images/figure_6_2.png')
+    plt.show()
+    # plt.savefig('../images/figure_6_2.png')
     plt.close()
 
 if __name__ == '__main__':
-    example_6_2()
+    # example_6_2()
     figure_6_2()
