@@ -115,6 +115,18 @@ print('lk num:', label_analysis_df[label_analysis_df['label']=='lk'].shape[0])
 print('gy num:', label_analysis_df[label_analysis_df['label']=='gy'].shape[0])
 print('sy num:', label_analysis_df[label_analysis_df['label']=='sy'].shape[0])
 
+lk_name_set = set(label_analysis_df[label_analysis_df['label']=='lk']['pic_name'].tolist())
+gy_name_set = set(label_analysis_df[label_analysis_df['label']=='gy']['pic_name'].tolist())
+sy_name_set = set(label_analysis_df[label_analysis_df['label']=='sy']['pic_name'].tolist())
+
+## result -> set()
+for i in [lk_name_set,gy_name_set,sy_name_set]:
+    for j in [lk_name_set,gy_name_set,sy_name_set]:
+        if i == j:
+            pass
+        else:
+            print(i&j)
+
 # %%
 # 'label_name', 'label_index', 'label_total_num', 'label', 'num', 'points', 'left_down', 'right_up', 
 # 'img_length', 'img_hight', 'left_dis',  'down_dis', 'right_dis', 'up_dis'
@@ -262,14 +274,19 @@ Limit_Length_by_Label_Dict['sy']['hight_limit'] = hight_limit_sy
 augment_info['max_ratio'] = 2
 augment_info.to_pickle(os.path.join(os.path.abspath('.') + '/observation_file','augment_info.pkl'))
 
+
 #%%
+augment_info['length_limit'] = 0
+augment_info['hight_limit'] = 0
 for i in range(len(augment_info)):
     _name = augment_info.loc[i]['pic_name']
     _max_ratio = augment_info.loc[i]['max_ratio']
-    json_transfer_dict[_name][0]['max_ratio'] 
-
-
-
+    _label = augment_info.loc[i]['label']
+    json_transfer_dict[_name][0]['max_ratio'] = 2
+    augment_info.loc[i]['length_limit'] = Limit_Length_by_Label_Dict[_label]['length_limit']
+    augment_info.loc[i]['hight_limit'] = Limit_Length_by_Label_Dict[_label]['hight_limit']
+    json_transfer_dict[_name][0]['length_limit'] = Limit_Length_by_Label_Dict[_label]['length_limit']
+    json_transfer_dict[_name][0]['hight_limit'] = Limit_Length_by_Label_Dict[_label]['hight_limit']
 
 # %%
 def random_contrast(img, simlar_tag):
@@ -306,7 +323,47 @@ def random_brightness(img, simlar_tag):
 augment_info[augment_info['img_length']==914]
 
 # %%
+def random_crop_expand(img, limits, shapes, boxes, boxes_tag, label_boxes, label_names, max_ratios, expand_range=[0.05,0.2]):
+    pass
 
+
+#%%
+pic_name_list = list(p2l_relation_dict.keys())
+pic_name_list = pic_name_list[:10]
+for _pic_name in pic_name_list:
+    with Image.open(os.path.join(PATH, pic_name),'r') as im:
+        pass
+pic_name = pic_name_list[0]
+with Image.open(os.path.join(PATH, pic_name),'r') as im:
+    new_im = random_brightness(im,0)
+    new_im.save(os.path.join(os.path.abspath('.')+'/imag_test', 'aug_'+pic_name),'JPEG')
+
+
+def box_crop(boxes, labels, crop, img_shape):
+    x, y, w, h = map(float, crop)
+    im_w, im_h = map(float, img_shape)
+
+    boxes = boxes.copy()
+    boxes[:, 0], boxes[:, 2] = (boxes[:, 0] - boxes[:, 2] / 2) * im_w, (boxes[:, 0] + boxes[:, 2] / 2) * im_w
+    boxes[:, 1], boxes[:, 3] = (boxes[:, 1] - boxes[:, 3] / 2) * im_h, (boxes[:, 1] + boxes[:, 3] / 2) * im_h
+
+    crop_box = np.array([x, y, x + w, y + h])
+    centers = (boxes[:, :2] + boxes[:, 2:]) / 2.0
+    mask = np.logical_and(crop_box[:2] <= centers, centers <= crop_box[2:]).all(axis=1)
+
+    boxes[:, :2] = np.maximum(boxes[:, :2], crop_box[:2])
+    boxes[:, 2:] = np.minimum(boxes[:, 2:], crop_box[2:])
+    boxes[:, :2] -= crop_box[:2]
+    boxes[:, 2:] -= crop_box[:2]
+
+    mask = np.logical_and(mask, (boxes[:, :2] < boxes[:, 2:]).all(axis=1))
+    boxes = boxes * np.expand_dims(mask.astype('float32'), axis=1)
+    labels = labels * mask.astype('float32')
+    boxes[:, 0], boxes[:, 2] = (boxes[:, 0] + boxes[:, 2]) / 2 / w, (boxes[:, 2] - boxes[:, 0]) / w
+    boxes[:, 1], boxes[:, 3] = (boxes[:, 1] + boxes[:, 3]) / 2 / h, (boxes[:, 3] - boxes[:, 1]) / h
+    
+
+    return boxes, labels, mask.sum()
 def random_crop(img, boxes, labels, scales=[0.1, 0.5], max_side_length=2.0, constraints=None, max_trial=50):
     if random.random() > 0.6:
         return img, boxes, labels
@@ -355,6 +412,9 @@ def random_crop(img, boxes, labels, scales=[0.1, 0.5], max_side_length=2.0, cons
         return img, crop_boxes, crop_labels
     return img, boxes, labels
 
+
+
+
 #%%
 def random_expand(img, gtboxes, keep_ratio=True):
     if np.random.uniform(0, 1) < train_parameters['image_distort_strategy']['expand_prob']:
@@ -384,10 +444,3 @@ def random_expand(img, gtboxes, keep_ratio=True):
     gtboxes[:, 3] = gtboxes[:, 3] / ratio_y
 
     return Image.fromarray(out_img), gtboxes
-
-#%%
-pic_name_list = list(p2l_relation_dict.keys())
-pic_name = pic_name_list[0]
-with Image.open(os.path.join(PATH, pic_name),'r') as im:
-    new_im = random_brightness(im,0)
-    new_im.save(os.path.join(os.path.abspath('.')+'/imag_test', 'aug_'+pic_name),'JPEG')
