@@ -1,0 +1,11 @@
+shortcut:将上一层的输出与 shortcut 的 layer 特征相加
+shortcut:add the output of upper layer to shortcut number layer
+
+route:截断网络传播并将 route 的层特征进行叠拼
+route:cut off the forward of network, and stack the route number layer
+
+max:最大池化
+max:max pool
+
+upsample:宽高*2, 通道不变
+upsample:output tensor ,height*2  width*2  channels*1

@@ -86,10 +86,34 @@ for _label_name in l2p_relation_dict.keys():
         _temp_list = [_pic_name, _label_name, _obj_index, _label_total_num, _label, _num, _point, _left_down, _right_up, _left, _down, _right, _up, _length, _hight, _left_dis, _down_dis, _right_dis, _up_dis]
         label_analysis_df.loc[row_num] = _temp_list
         row_num+=1
-
+#######################
+#    down             #
+#left                 #
+#                     #
+#                     #
+#               right #
+#             up      #
+#######################
 label_analysis_df.sort_values(by='num', inplace=True)
 label_analysis_df.reset_index(drop=True,inplace=True)
 print(label_analysis_df.head(3))
+
+#%%
+def area_get(row):
+    area = (row.right-row.left)*(row.up-row.down)
+    return area
+label_analysis_df['area'] = label_analysis_df.apply(lambda x:area_get(x), axis=1)
+
+#%%
+## 20*20 多扫描一点
+## 10*10 次之
+## 40*40 再次之
+%matplotlib inline 
+label_analysis_df[label_analysis_df['area']==43824]         # 43824 max
+label_analysis_df[label_analysis_df['area']==9]             # 1120  min
+print(label_analysis_df[label_analysis_df['area']<=1600].shape[0]/label_analysis_df.shape[0])
+label_analysis_df[label_analysis_df['area']<=1600][['area']].hist()
+
 #%%
 label_analysis_df.to_csv(os.path.join(os.path.abspath('.')+'/observation_file', 'image_analysis.csv'))
 label_analysis_df.to_pickle(os.path.join(os.path.abspath('.')+'/observation_file','image_analysis.pkl'))
@@ -194,10 +218,13 @@ augment_info['bc_similar'] = 2
 
 def bc_tag_label(row):
     if row.brightness_contrast > simlar_tag:
-        return 1
+        json_transfer_dict[row.pic_name][0]['bc_similar'] = 1
+        return 2
     elif row.brightness_contrast < difference_tag:
-        return 0
+        json_transfer_dict[row.pic_name][0]['bc_similar'] = 0
+        return 2
     else:
+        json_transfer_dict[row.pic_name][0]['bc_similar'] = 2
         return 2
 
 augment_info['bc_similar'] = augment_info.apply(lambda x:bc_tag_label(x), axis=1)
@@ -291,156 +318,277 @@ for i in range(len(augment_info)):
 # %%
 def random_contrast(img, simlar_tag):
     if simlar_tag == 1:
+        print('dark_contrast')
         delta = np.random.uniform(-0.4, -0.05) + 1
     elif simlar_tag == 0:
+        print('light_contrast')
         delta = np.random.uniform(0.05, 0.5) + 1
     else:
         prob = np.random.uniform(0, 1)
         if prob < 0.5:
+            print('dark_contrast')
             delta = np.random.uniform(-0.3, -0.05) + 1
         else:
+            print('light_contrast')
             delta = np.random.uniform(0.05, 0.4) + 1
     img = ImageEnhance.Contrast(img).enhance(delta)
-    return img
-
-def random_brightness(img, simlar_tag):
-    if simlar_tag == 1:
-        delta = np.random.uniform(-0.3, -0.05) + 1
-    elif simlar_tag == 0:
-        delta = np.random.uniform(0.05, 0.6) + 1
-    else:
-        prob = np.random.uniform(0, 1)
-        if prob < 0.5:
-            delta = np.random.uniform(-0.3, -0.05) + 1
-        else:
-            delta = np.random.uniform(0.05, 0.5) + 1
-    # delta = 2
     img = ImageEnhance.Brightness(img).enhance(delta)
     return img
+
+# def random_brightness(img, simlar_tag):
+#     if simlar_tag == 1:
+#         print('dark_brightness')
+#         delta = np.random.uniform(-0.3, -0.05) + 1
+#     elif simlar_tag == 0:
+#         print('light_brightness')
+#         delta = np.random.uniform(0.05, 0.6) + 1
+#     else:
+#         prob = np.random.uniform(0, 1)
+#         if prob < 0.5:
+#             print('dark_brightness')
+#             delta = np.random.uniform(-0.3, -0.05) + 1
+#         else:
+#             print('light_brightness')
+#             delta = np.random.uniform(0.05, 0.5) + 1
+#     # delta = 2
+#     img = ImageEnhance.Brightness(img).enhance(delta)
+#     return img
 
 
 #%%
 augment_info[augment_info['img_length']==914]
 
 # %%
-def random_crop_expand(img, limits, shapes, boxes, boxes_tag, label_boxes, label_names, max_ratios, expand_range=[0.05,0.2]):
-    pass
+def save_file(path, item):
+    
+    # 先将字典对象转化为可写入文本的字符串
+    item = json.dumps(item)
 
+    try:
+        with open(path, "w", encoding='utf-8') as f:
+            f.write(item)
+            print("^_^ write success")
+    except Exception as e:
+        print("write error==>", e)
+            
+def random_crop_expand(img, limits, shapes, boxes, boxes_tag, label_boxes, label_names, max_ratios, similar_tag, gen_num=0, expand_range=[-0.15, 0.3]):
+    """
+    :param img 图片对象
+    :param limits [400, 300]      图片最长尺度
+    :param shapes [219, 250]      图片尺寸
+    :param boxes [101, 0, 0, 0]   可切割长度
+    :param boxes_tag [1, 0, 0, 0] 可变化的边
+    :param label_boxes [((101, 1), (209, 248))]  标签的标记框
+    :param label_names ['sy']     图片的标签
+    :param max_ratios             最大可扩展尺寸
+    """
+    feasible_crop_tag = np.nonzero(boxes_tag)[0]
+    crop_num = random.randrange(1,len(feasible_crop_tag)+1)
+    print(crop_num,feasible_crop_tag)
+    crop_index_list = random.sample(set(feasible_crop_tag), crop_num)
+    print('raw shapes:',shapes)
+    _crop_left = 0
+    _crop_down = 0
+    _crop_right = shapes[0]
+    _crop_up = shapes[1]
+    if random.random() < 0.6:
+        print('raw label_boxes:',label_boxes)
+        for i in crop_index_list:
+            max_crop_size = boxes[i]
+            crop_size = random.randrange(crop_tag, max_crop_size)
+            print('crop_size:', crop_size)
+            if i == 0:
+                _crop_left += crop_size
+            elif i == 2:
+                _crop_right -= crop_size
+            elif i == 3:
+                _crop_up -= crop_size
+            else:
+                _crop_down += crop_size
+            for _label_box in label_boxes:
+                if i == 0:
+                    _label_box[0] = _label_box[0] - crop_size
+                    _label_box[2] = _label_box[2] - crop_size
+                elif i == 1:
+                    _label_box[1] = _label_box[1] - crop_size
+                    _label_box[3] = _label_box[3] - crop_size
+                else:
+                    pass
+        print('change label_boxes:',label_boxes)
+        box = [_crop_left, _crop_down, _crop_right, _crop_up]
+        img_crop = img.crop(box)
+    else:
+        print('label_boxes not change')
+        img_crop = copy.deepcopy(img)
+    crop_length, crop_hight = img_crop.size
+    expand_coef = random.uniform(expand_range[0],expand_range[1])
+    if expand_coef > -0.05 and expand_coef < 0:
+        expand_coef = -0.05
+    elif expand_coef < 0.05 and expand_coef >= 0:
+        expand_coef = 0.05
+    expand_coef = min([limits[0]/crop_length - 1, limits[1]/crop_hight - 1, expand_coef])
+    crop_length = int(crop_length * (1+expand_coef))
+    crop_hight = int(crop_hight * (1+expand_coef))
+    for _label_box in label_boxes:
+        _label_box[0] = int(_label_box[0] * (1+expand_coef))
+        _label_box[1] = int(_label_box[1] * (1+expand_coef))
+        _label_box[2] = int(_label_box[2] * (1+expand_coef))
+        _label_box[3] = int(_label_box[3] * (1+expand_coef))
+        if _label_box[2] - _label_box[0] <= 1:
+            _label_box[2] += 1
+        if _label_box[3] - _label_box[1] <= 1:
+            _label_box[3] += 1
+    print('expand_coef:',expand_coef)
+    print('change2 label_boxes:', label_boxes)
+    img_expand = img_crop.resize((crop_length, crop_hight))
+    if random.random() < 0.5:
+        img_expand = img_expand.transpose(Image.FLIP_LEFT_RIGHT)
+        for _label_box in label_boxes:
+            _label_box[2], _label_box[0] = crop_length - _label_box[0], crop_length - _label_box[2]
+    print('similar_tag:',similar_tag)
+    print('size:', crop_length, crop_hight)
+    new_im = random_contrast(img_expand, similar_tag)
+    new_im.save(os.path.join(os.path.abspath('.')+'/imag_test', 'aug_'+str(gen_num)+'_'+_pic_name),'JPEG')
+    json_dict = defaultdict(list)
+    for i in range(len(label_boxes)):
+        sub_dict = dict()
+        sub_dict['points']=[[label_boxes[i][0],label_boxes[i][1]],[label_boxes[i][2],label_boxes[i][3]]]
+        sub_dict['label']=label_names[i]
+        json_dict['shapes'].append(sub_dict)
+        
+    save_file(os.path.join(os.path.abspath('.')+'/imag_test', 'aug_'+str(gen_num)+'_'+_pic_name[:-4]+'json'),json_dict)
+    pass
 
 #%%
 pic_name_list = list(p2l_relation_dict.keys())
-pic_name_list = pic_name_list[:10]
+pic_name_list = pic_name_list[:2]
+gene_num_param = 0
 for _pic_name in pic_name_list:
-    with Image.open(os.path.join(PATH, pic_name),'r') as im:
+    with Image.open(os.path.join(PATH, _pic_name),'r') as im:
+        total_index = json_transfer_dict[_pic_name][0]['label_total_num']
+        shapes_param = [json_transfer_dict[_pic_name][0]['img_length'], json_transfer_dict[_pic_name][0]['img_hight']]
+        similar_tag_param = json_transfer_dict[_pic_name][0]['bc_similar']
+        _series = augment_info[augment_info['pic_name']==_pic_name]
+        boxes_param = _series['crop_num_list'].tolist()[0]
+        boxes_tag_parm = _series['crop_tag_list'].tolist()[0]
+        max_ratios_param = _series['max_ratio'].tolist()[0]
+        label_names_list = []
+        label_boxes_list = []
+        print('===========================', total_index)
+        for _index in range(total_index):
+            label_names_param = json_transfer_dict[_pic_name][_index]['label']
+            label_boxes_param = [json_transfer_dict[_pic_name][_index]['left'],json_transfer_dict[_pic_name][_index]['down'],json_transfer_dict[_pic_name][_index]['right'],json_transfer_dict[_pic_name][_index]['up']]
+            label_names_list.append(label_names_param)
+            label_boxes_list.append(label_boxes_param)
+        limits_param = [Limit_Length_by_Label_Dict[label_names_param]['length_limit'],Limit_Length_by_Label_Dict[label_names_param]['hight_limit']]
+        random_crop_expand(im,limits_param,shapes_param,boxes_param,boxes_tag_parm,label_boxes_list,label_names_list,max_ratios_param,similar_tag_param,gene_num_param)
+        gene_num_param += 1
         pass
-pic_name = pic_name_list[0]
-with Image.open(os.path.join(PATH, pic_name),'r') as im:
-    new_im = random_brightness(im,0)
-    new_im.save(os.path.join(os.path.abspath('.')+'/imag_test', 'aug_'+pic_name),'JPEG')
-
-
-def box_crop(boxes, labels, crop, img_shape):
-    x, y, w, h = map(float, crop)
-    im_w, im_h = map(float, img_shape)
-
-    boxes = boxes.copy()
-    boxes[:, 0], boxes[:, 2] = (boxes[:, 0] - boxes[:, 2] / 2) * im_w, (boxes[:, 0] + boxes[:, 2] / 2) * im_w
-    boxes[:, 1], boxes[:, 3] = (boxes[:, 1] - boxes[:, 3] / 2) * im_h, (boxes[:, 1] + boxes[:, 3] / 2) * im_h
-
-    crop_box = np.array([x, y, x + w, y + h])
-    centers = (boxes[:, :2] + boxes[:, 2:]) / 2.0
-    mask = np.logical_and(crop_box[:2] <= centers, centers <= crop_box[2:]).all(axis=1)
-
-    boxes[:, :2] = np.maximum(boxes[:, :2], crop_box[:2])
-    boxes[:, 2:] = np.minimum(boxes[:, 2:], crop_box[2:])
-    boxes[:, :2] -= crop_box[:2]
-    boxes[:, 2:] -= crop_box[:2]
-
-    mask = np.logical_and(mask, (boxes[:, :2] < boxes[:, 2:]).all(axis=1))
-    boxes = boxes * np.expand_dims(mask.astype('float32'), axis=1)
-    labels = labels * mask.astype('float32')
-    boxes[:, 0], boxes[:, 2] = (boxes[:, 0] + boxes[:, 2]) / 2 / w, (boxes[:, 2] - boxes[:, 0]) / w
-    boxes[:, 1], boxes[:, 3] = (boxes[:, 1] + boxes[:, 3]) / 2 / h, (boxes[:, 3] - boxes[:, 1]) / h
     
 
-    return boxes, labels, mask.sum()
-def random_crop(img, boxes, labels, scales=[0.1, 0.5], max_side_length=2.0, constraints=None, max_trial=50):
-    if random.random() > 0.6:
-        return img, boxes, labels
-    if len(boxes) == 0:
-        return img, boxes, labels
 
-    if not constraints:
-        constraints = [
-                (0.1, 1.0),
-                (0.3, 1.0),
-                (0.5, 1.0),
-                (0.7, 1.0),
-                (0.9, 1.0),
-                (0.0, 1.0)]
-
-    w, h = img.size
-    crops = [(0, 0, w, h)]
-    for min_iou, max_iou in constraints:
-        for _ in range(max_trial):
-            scale = random.uniform(scales[0], scales[1])
-            aspect_ratio = random.uniform(max(1 / max_ratio, scale * scale), \
-                                          min(max_ratio, 1 / scale / scale))
-            crop_h = int(h * scale / np.sqrt(aspect_ratio))
-            crop_w = int(w * scale * np.sqrt(aspect_ratio))
-            crop_x = random.randrange(w - crop_w)
-            crop_y = random.randrange(h - crop_h)
-            crop_box = np.array([[
-                (crop_x + crop_w / 2.0) / w,
-                (crop_y + crop_h / 2.0) / h,
-                crop_w / float(w),
-                crop_h /float(h)
-                ]])
-
-            iou = box_iou_xywh(crop_box, boxes)
-            if min_iou <= iou.min() and max_iou >= iou.max():
-                crops.append((crop_x, crop_y, crop_w, crop_h))
-                break
-
-    while crops:
-        crop = crops.pop(np.random.randint(0, len(crops)))
-        crop_boxes, crop_labels, box_num = box_crop(boxes, labels, crop, (w, h))
-        if box_num < 1:
-            continue
-        img = img.crop((crop[0], crop[1], crop[0] + crop[2], 
-                        crop[1] + crop[3])).resize(img.size, Image.LANCZOS)
-        return img, crop_boxes, crop_labels
-    return img, boxes, labels
-
-
-
+# %%
+augment_info[['img_length', 'img_hight']] = augment_info[['img_length', 'img_hight']].astype(int)
+# 1538~1647 : 110 * 320  :141     :lk
+# 912~1537  : 626 * 60   :1418    :gy
+# 0~911     : 912 * 40   :1927    :sy
 
 #%%
-def random_expand(img, gtboxes, keep_ratio=True):
-    if np.random.uniform(0, 1) < train_parameters['image_distort_strategy']['expand_prob']:
-        return img, gtboxes
+augment_info.label_total_num.value_counts()
 
-    max_ratio = train_parameters['image_distort_strategy']['expand_max_ratio']    
-    w, h = img.size
-    c = 3
-    ratio_x = random.uniform(1, max_ratio)
-    if keep_ratio:
-        ratio_y = ratio_x
+# %%
+# 929 466
+# lk 1643
+lk_mul_label = augment_info[(augment_info['label_total_num'] >= 2) & (augment_info['label'] == 'lk')]['num'].tolist()
+gy_mul_label = augment_info[(augment_info['label_total_num'] >= 3) & (augment_info['label'] == 'gy')]['num'].tolist()
+sy_mul_label = augment_info[(augment_info['label_total_num'] >= 3) & (augment_info['label'] == 'sy')]['num'].tolist()
+
+# %%
+gene_num_param = 0
+# while gene_num_param <= 20000:
+while gene_num_param <= 2:
+    if random.random()<0.15:
+        _pic_num = random.choice(gy_mul_label)
     else:
-        ratio_y = random.uniform(1, max_ratio)
-    oh = int(h * ratio_y)
-    ow = int(w * ratio_x)
-    off_x = random.randint(0, ow -w)
-    off_y = random.randint(0, oh -h)
+        _pic_num = random.randint(1538,1647)
+    _pic_name = 'train_r'+str(_pic_num)+'.jpeg'
+    with Image.open(os.path.join(PATH, _pic_name),'r') as im:
+        total_index = json_transfer_dict[_pic_name][0]['label_total_num']
+        shapes_param = [json_transfer_dict[_pic_name][0]['img_length'], json_transfer_dict[_pic_name][0]['img_hight']]
+        similar_tag_param = json_transfer_dict[_pic_name][0]['bc_similar']
+        _series = augment_info[augment_info['pic_name']==_pic_name]
+        boxes_param = _series['crop_num_list'].tolist()[0]
+        boxes_tag_parm = _series['crop_tag_list'].tolist()[0]
+        max_ratios_param = _series['max_ratio'].tolist()[0]
+        label_names_list = []
+        label_boxes_list = []
+        print('===========================', total_index)
+        for _index in range(total_index):
+            label_names_param = json_transfer_dict[_pic_name][_index]['label']
+            label_boxes_param = [json_transfer_dict[_pic_name][_index]['left'],json_transfer_dict[_pic_name][_index]['down'],json_transfer_dict[_pic_name][_index]['right'],json_transfer_dict[_pic_name][_index]['up']]
+            label_names_list.append(label_names_param)
+            label_boxes_list.append(label_boxes_param)
+        limits_param = [Limit_Length_by_Label_Dict[label_names_param]['length_limit'],Limit_Length_by_Label_Dict[label_names_param]['hight_limit']]
+        random_crop_expand(im,limits_param,shapes_param,boxes_param,boxes_tag_parm,label_boxes_list,label_names_list,max_ratios_param,similar_tag_param,gene_num_param)
+        gene_num_param += 1
+        pass
+    
+gene_num_param = 0
+# while gene_num_param <= 30000:
+while gene_num_param <= 3:
+    if random.random()<0.15:
+        _pic_num = random.choice(lk_mul_label)
+    else:
+        _pic_num = random.randint(912,1537)
+    _pic_name = 'train_r'+str(_pic_num)+'.jpeg'
+    with Image.open(os.path.join(PATH, _pic_name),'r') as im:
+        total_index = json_transfer_dict[_pic_name][0]['label_total_num']
+        shapes_param = [json_transfer_dict[_pic_name][0]['img_length'], json_transfer_dict[_pic_name][0]['img_hight']]
+        similar_tag_param = json_transfer_dict[_pic_name][0]['bc_similar']
+        _series = augment_info[augment_info['pic_name']==_pic_name]
+        boxes_param = _series['crop_num_list'].tolist()[0]
+        boxes_tag_parm = _series['crop_tag_list'].tolist()[0]
+        max_ratios_param = _series['max_ratio'].tolist()[0]
+        label_names_list = []
+        label_boxes_list = []
+        print('===========================', total_index)
+        for _index in range(total_index):
+            label_names_param = json_transfer_dict[_pic_name][_index]['label']
+            label_boxes_param = [json_transfer_dict[_pic_name][_index]['left'],json_transfer_dict[_pic_name][_index]['down'],json_transfer_dict[_pic_name][_index]['right'],json_transfer_dict[_pic_name][_index]['up']]
+            label_names_list.append(label_names_param)
+            label_boxes_list.append(label_boxes_param)
+        limits_param = [Limit_Length_by_Label_Dict[label_names_param]['length_limit'],Limit_Length_by_Label_Dict[label_names_param]['hight_limit']]
+        random_crop_expand(im,limits_param,shapes_param,boxes_param,boxes_tag_parm,label_boxes_list,label_names_list,max_ratios_param,similar_tag_param,gene_num_param)
+        gene_num_param += 1
+        pass
+    
+gene_num_param = 0
+# while gene_num_param <= 30000:
+while gene_num_param <= 3:
+    if random.random()<0.15:
+        _pic_num = random.choice(sy_mul_label)
+    else:
+        _pic_num = random.randint(0,911)
+    _pic_name = 'train_r'+str(_pic_num)+'.jpeg'
+    with Image.open(os.path.join(PATH, _pic_name),'r') as im:
+        total_index = json_transfer_dict[_pic_name][0]['label_total_num']
+        shapes_param = [json_transfer_dict[_pic_name][0]['img_length'], json_transfer_dict[_pic_name][0]['img_hight']]
+        similar_tag_param = json_transfer_dict[_pic_name][0]['bc_similar']
+        _series = augment_info[augment_info['pic_name']==_pic_name]
+        boxes_param = _series['crop_num_list'].tolist()[0]
+        boxes_tag_parm = _series['crop_tag_list'].tolist()[0]
+        max_ratios_param = _series['max_ratio'].tolist()[0]
+        label_names_list = []
+        label_boxes_list = []
+        print('===========================', total_index)
+        for _index in range(total_index):
+            label_names_param = json_transfer_dict[_pic_name][_index]['label']
+            label_boxes_param = [json_transfer_dict[_pic_name][_index]['left'],json_transfer_dict[_pic_name][_index]['down'],json_transfer_dict[_pic_name][_index]['right'],json_transfer_dict[_pic_name][_index]['up']]
+            label_names_list.append(label_names_param)
+            label_boxes_list.append(label_boxes_param)
+        limits_param = [Limit_Length_by_Label_Dict[label_names_param]['length_limit'],Limit_Length_by_Label_Dict[label_names_param]['hight_limit']]
+        random_crop_expand(im,limits_param,shapes_param,boxes_param,boxes_tag_parm,label_boxes_list,label_names_list,max_ratios_param,similar_tag_param,gene_num_param)
+        gene_num_param += 1
+        pass
 
-    out_img = np.zeros((oh, ow, c), np.uint8)
-    for i in range(c):
-        out_img[:, :, i] = train_parameters['mean_rgb'][i]
-
-    out_img[off_y: off_y + h, off_x: off_x + w, :] = img
-    gtboxes[:, 0] = ((gtboxes[:, 0] * w) + off_x) / float(ow)
-    gtboxes[:, 1] = ((gtboxes[:, 1] * h) + off_y) / float(oh)
-    gtboxes[:, 2] = gtboxes[:, 2] / ratio_x
-    gtboxes[:, 3] = gtboxes[:, 3] / ratio_y
-
-    return Image.fromarray(out_img), gtboxes
+# %%

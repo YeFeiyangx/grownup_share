@@ -1,0 +1,13 @@
+C:\Users\xluckyhappy\Desktop\YOLOV4_TEST\YOLOv4_tensorflow-master\data\JPEGImages_AIWIN\061611\aug_0_train_r0.jpeg
+C:\Users\xluckyhappy\Desktop\YOLOV4_TEST\YOLOv4_tensorflow-master\data\JPEGImages_AIWIN\061611\aug_0_train_r1523.jpeg
+C:\Users\xluckyhappy\Desktop\YOLOV4_TEST\YOLOv4_tensorflow-master\data\JPEGImages_AIWIN\061611\aug_0_train_r1614.jpeg
+C:\Users\xluckyhappy\Desktop\YOLOV4_TEST\YOLOv4_tensorflow-master\data\JPEGImages_AIWIN\061611\aug_0_train_r84.jpeg
+C:\Users\xluckyhappy\Desktop\YOLOV4_TEST\YOLOv4_tensorflow-master\data\JPEGImages_AIWIN\061611\aug_1_train_r1.jpeg
+C:\Users\xluckyhappy\Desktop\YOLOV4_TEST\YOLOv4_tensorflow-master\data\JPEGImages_AIWIN\061611\aug_1_train_r1630.jpeg
+C:\Users\xluckyhappy\Desktop\YOLOV4_TEST\YOLOv4_tensorflow-master\data\JPEGImages_AIWIN\061611\aug_1_train_r850.jpeg
+C:\Users\xluckyhappy\Desktop\YOLOV4_TEST\YOLOv4_tensorflow-master\data\JPEGImages_AIWIN\061611\aug_1_train_r927.jpeg
+C:\Users\xluckyhappy\Desktop\YOLOV4_TEST\YOLOv4_tensorflow-master\data\JPEGImages_AIWIN\061611\aug_2_train_r1529.jpeg
+C:\Users\xluckyhappy\Desktop\YOLOV4_TEST\YOLOv4_tensorflow-master\data\JPEGImages_AIWIN\061611\aug_2_train_r1630.jpeg
+C:\Users\xluckyhappy\Desktop\YOLOV4_TEST\YOLOv4_tensorflow-master\data\JPEGImages_AIWIN\061611\aug_2_train_r763.jpeg
+C:\Users\xluckyhappy\Desktop\YOLOV4_TEST\YOLOv4_tensorflow-master\data\JPEGImages_AIWIN\061611\aug_3_train_r1530.jpeg
+C:\Users\xluckyhappy\Desktop\YOLOV4_TEST\YOLOv4_tensorflow-master\data\JPEGImages_AIWIN\061611\aug_3_train_r624.jpeg
