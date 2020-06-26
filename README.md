@@ -1,4 +1,4 @@
-# Grownup Shared
+# Grownup & Share
 
 Algorithm learning process shared by a chemical engineer.
 
@@ -6,7 +6,7 @@ Wish to help someone like me to face the future.
 
 ## Table of Contents
 
-- [Grownup Shared](#grownup-shared)
+- [Grownup & Share](#grownup--share)
   - [Table of Contents](#table-of-contents)
   - [Growth Process Resource Introduction](#growth-process-resource-introduction)
   - [Basic Algorithms](#basic-algorithms)
