@@ -43,7 +43,7 @@ Classical algorithm like graph, tree, greedy, sort and search. Include some basi
 Some basic RL examples will be given in this part which contains two implementation methods. One is to build the model completely. The others is with the help of APIs.(PaddleParl, GoogleAgents, etc.) And I will give some tips to tuning the models in my opinions. Thanks for original author's contributions.
 
 - Examples from RL-An-Introduction-Master;
-- PaddleParl tutorials;
+- [PaddleParl tutorials](https://github.com/YeFeiyangx/grownup_share/tree/master/PaddleParlExample);
   - [Sarsa_On_Policy](https://github.com/YeFeiyangx/grownup_share/tree/master/PaddleParlExample/01MazeSarsaOnPolicy)
   - [DQN_Off_Policy](https://github.com/YeFeiyangx/grownup_share/tree/master/PaddleParlExample/02MazeQlearningOffPolicy)
   - [Policy_Gradient](https://github.com/YeFeiyangx/grownup_share/tree/master/PaddleParlExample/04PongGame_RL)
