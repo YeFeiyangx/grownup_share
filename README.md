@@ -44,15 +44,10 @@ Some basic RL examples will be given in this part which contains two implementat
 
 - Examples from RL-An-Introduction-Master;
 - PaddleParl tutorials;
-  - DQN on-policy & off-policy
-  - Gradient Policy
-  - DDPG
-
-[DQN_On_Policy]<https://www.jianshu.com/p/79127689b656>
-
-[DQN_Off_Policy]<https://www.jianshu.com/p/79127689b656>
-
-[DDPG]<https://www.jianshu.com/p/79127689b656>
+  - [Sarsa_On_Policy](https://github.com/YeFeiyangx/grownup_share/tree/master/PaddleParlExample/01MazeSarsaOnPolicy)
+  - [DQN_Off_Policy](https://github.com/YeFeiyangx/grownup_share/tree/master/PaddleParlExample/02MazeQlearningOffPolicy)
+  - [Policy_Gradient](https://github.com/YeFeiyangx/grownup_share/tree/master/PaddleParlExample/04PongGame_RL)
+  - [DDPG](https://github.com/YeFeiyangx/grownup_share/tree/master/PaddleParlExample/05AircraftDDPG)
 
 ## Optimization Tools
 
@@ -60,11 +55,11 @@ Here will provide basic tutorials by Google's software which suite for combinato
 
 ## Design Patterns
 
->[Design_Principle]<https://www.jianshu.com/p/79127689b656> (迪米特原则-最少知识原则)
->[Singleton_Pattern]<https://github.com/YeFeiyangx/grownup_share/tree/master/Design_Parttern/01_Singleton_Pattern>
->[Factory_Pattern]  <https://github.com/YeFeiyangx/grownup_share/tree/master/Design_Parttern/02_Factory_Pattern>
->[Facade_Pattern]   <https://github.com/YeFeiyangx/grownup_share/tree/master/Design_Parttern/03_Facade_Pattern>
->[Proxy_Pattern]    <https://github.com/YeFeiyangx/grownup_share/tree/master/Design_Parttern/04_Proxy_Pattern>
+- [Design_Principle](https://www.jianshu.com/p/79127689b656)
+- [Singleton_Pattern](https://github.com/YeFeiyangx/grownup_share/tree/master/Design_Parttern/01_Singleton_Pattern)
+- [Factory_Pattern](https://github.com/YeFeiyangx/grownup_share/tree/master/Design_Parttern/02_Factory_Pattern)
+- [Facade_Pattern](https://github.com/YeFeiyangx/grownup_share/tree/master/Design_Parttern/03_Facade_Pattern)
+- [Proxy_Pattern](https://github.com/YeFeiyangx/grownup_share/tree/master/Design_Parttern/04_Proxy_Pattern)
 
 ## Deep Learing
 
