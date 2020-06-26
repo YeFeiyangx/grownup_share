@@ -1,33 +1,26 @@
 #!/usr/bin/env python
 # coding: utf-8
+"""
+PaddleParl的使用，可以简化算法的构建代码。
 
-# # Step1 安装依赖
+PolicyGradient可以用来直接学习策略，但是个人感觉效率不高。
 
-# # In[1]:
+该场景中，把图像信息先调整为灰度图像，然后变为一维输入进行DNN学习，也可以使用CNN，但建议调节灰度，减少环境噪音。
 
+图像拍平后，其维度存在80*80，既6400维度。因此网络如果太小，其模型很难习得该空间中的信息。
+例如本example中，网络单层为act_dim * 10，既60维度，第一层的信息损益太大，导致模型最终无法达到均分10分效果。
+建议把第一维度提高至512维以上。
 
-# get_ipython().system('pip uninstall -y parl  # 说明：AIStudio预装的parl版本太老，容易跟其他库产生兼容性冲突，建议先卸载')
-# get_ipython().system('pip uninstall -y pandas scikit-learn # 提示：在AIStudio中卸载这两个库再import parl可避免warning提示，不卸载也不影响parl的使用')
-
-# get_ipython().system('pip install gym')
-# get_ipython().system('pip install atari-py # 玩Gym的Atari游戏必装依赖，本次作业使用了Atari的Pong(乒乓球)环境')
-# get_ipython().system('pip install paddlepaddle==1.6.3')
-# get_ipython().system('pip install parl==1.3.1')
-
-# # 说明：安装日志中出现两条红色的关于 paddlehub 和 visualdl 的 ERROR 与parl无关，可以忽略，不影响使用
+"""
 
 
-# # In[2]:
+# !pip uninstall -y parl  # 说明：AIStudio预装的parl版本太老，容易跟其他库产生兼容性冲突，建议先卸载
+# !pip uninstall -y pandas scikit-learn # 提示：在AIStudio中卸载这两个库再import parl可避免warning提示，不卸载也不影响parl的使用
 
-
-# # 检查依赖包版本是否正确
-# get_ipython().system('pip list | grep paddlepaddle')
-# get_ipython().system('pip list | grep parl')
-
-
-# # # Step2 导入依赖
-
-# In[3]:
+# !pip install gym
+# !pip install atari-py # 玩Gym的Atari游戏必装依赖，本次作业使用了Atari的Pong(乒乓球)环境
+# !pip install paddlepaddle-gpu==1.6.3.post97 -i https://mirror.baidu.com/pypi/simple
+# !pip install parl==1.3.1 -i https://mirror.baidu.com/pypi/simple
 
 
 import os
@@ -40,92 +33,37 @@ from parl import layers
 from parl.utils import logger
 
 
-# # Step3 设置超参数
-
-# In[4]:
-
-
-######################################################################
-######################################################################
-#
-# 1. 请设定 learning rate，尝试增减查看效果
-#
-######################################################################
-######################################################################
-
 LEARNING_RATE = 0.0006
-
-
-# # Step4 搭建Model、Algorithm、Agent架构
-# * `Agent`把产生的数据传给`algorithm`，`algorithm`根据`model`的模型结构计算出`Loss`，使用`SGD`或者其他优化器不断的优化，`PARL`这种架构可以很方便的应用在各类深度强化学习问题中。
-# 
-# #### （1）Model
-# `Model`用来定义前向(`Forward`)网络，用户可以自由的定制自己的网络结构。
-
-# In[5]:
 
 
 class Model(parl.Model):
     def __init__(self, act_dim):
         ######################################################################
+        ######################################################################
         hid1_size = act_dim * 10
-
+        hid2_size = act_dim * 10
+        hid3_size = act_dim
         # 3层全连接网络
-        self.fc1 = layers.fc(size=hid1_size, act='tanh')
-        self.fc3 = layers.fc(size=act_dim, act='softmax')
+        self.fc1 = layers.fc(size=hid1_size, act='relu')
+        self.fc2 = layers.fc(size=hid2_size, act='relu')
+        self.fc3 = layers.fc(size=hid3_size, act='softmax')
+        ######################################################################
+        ######################################################################
 
-    def forward(self, obs):
-        # 定义网络
-        # 输入state，输出所有action对应的Q，[Q(s,a1), Q(s,a2), Q(s,a3)...]
-
+    def forward(self, obs):  # 可直接用 model = Model(5); model(obs)调用
+        ######################################################################
+        ######################################################################
         h1 = self.fc1(obs)
-        # h2 = self.fc2(h1)
-        Q = self.fc3(h1)
-        return Q
-
-
-# In[6]:
-
-
-# class Model(parl.Model):
-#     def __init__(self, act_dim):
-#         ######################################################################
-#         ######################################################################
-#         hid1_size = act_dim * 10
-#         hid2_size = act_dim * 10
-#         hid3_size = act_dim
-#         # 3层全连接网络
-#         self.fc1 = layers.fc(size=hid1_size, act='relu')
-#         self.fc2 = layers.fc(size=hid2_size, act='relu')
-#         self.fc3 = layers.fc(size=hid3_size, act='softmax')
-#         ######################################################################
-#         ######################################################################
-
-#     def forward(self, obs):  # 可直接用 model = Model(5); model(obs)调用
-#         ######################################################################
-#         ######################################################################
-#         h1 = self.fc1(obs)
-#         h2 = self.fc2(h1)
-#         out = self.fc3(h2)
-#         ######################################################################
-#         ######################################################################
-#         return out
-
-
-# #### （2）Algorithm
-# * `Algorithm` 定义了具体的算法来更新前向网络(`Model`)，也就是通过定义损失函数来更新`Model`，和算法相关的计算都放在`algorithm`中。
-
-# In[7]:
-
+        h2 = self.fc2(h1)
+        out = self.fc3(h2)
+        ######################################################################
+        ######################################################################
+        return out
 
 from parl.algorithms import PolicyGradient # 直接从parl库中导入PolicyGradient算法，无需重复写算法
 
 
-# #### （3）Agent
 # * `Agent`负责算法与环境的交互，在交互过程中把生成的数据提供给`Algorithm`来更新模型(`Model`)，数据的预处理流程也一般定义在这里。
-
-# In[8]:
-
 
 class Agent(parl.Agent):
     def __init__(self, algorithm, obs_dim, act_dim):
@@ -184,9 +122,6 @@ class Agent(parl.Agent):
 
 # ### Step 5 Training && Test（训练&&测试）
 
-# In[9]:
-
-
 def run_episode(env, agent):
     obs_list, action_list, reward_list = [], [], []
     obs = env.reset()
@@ -224,9 +159,6 @@ def evaluate(env, agent, render=False):
 
 
 # ### Step6 创建环境和Agent，启动训练，保存模型
-
-# In[13]:
-
 
 
 # Pong 图片预处理
@@ -274,8 +206,8 @@ agent = Agent(
 
 
 # 加载模型
-# if os.path.exists('./model.ckpt'):
-agent.restore(r'C:\Users\xluckyhappy\Downloads\model.ckpt')
+if os.path.exists('./model_11.ckpt'):
+    agent.restore('./model_11.ckpt')
 init_level = -7
 np.random.seed(1024)
 for i in range(1000):
@@ -283,7 +215,7 @@ for i in range(1000):
     # if i % 10 == 0:
     #     logger.info("Train Episode {}, Reward Sum {}.".format(i, 
     #                                         sum(reward_list)))
-
+    
     batch_obs = np.array(obs_list)
     batch_action = np.array(action_list)
     batch_reward = calc_reward_to_go(reward_list)

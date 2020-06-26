@@ -48,6 +48,12 @@ Some basic RL examples will be given in this part which contains two implementat
   - Gradient Policy
   - DDPG
 
+[DQN_On_Policy]<https://www.jianshu.com/p/79127689b656>
+
+[DQN_Off_Policy]<https://www.jianshu.com/p/79127689b656>
+
+[DDPG]<https://www.jianshu.com/p/79127689b656>
+
 ## Optimization Tools
 
 Here will provide basic tutorials by Google's software which suite for combinatorial optimization.(or-tools)
