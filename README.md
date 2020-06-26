@@ -29,20 +29,21 @@ E-books can easily obtain on the internet.(Deep Learning, Reinforce Learning, et
 
 Classical algorithm like graph, tree, greedy, sort and search. Include some basic scenarios like the shortest path and information retrieval.
 
-- Graphtree;
-- Shackhands;
-- Recursion;
-- Ergodic;
-- Divide;
-- Greedy;
-- Dijkstra;
-- Some helpful methods provided by Python.
+- [Classical Algorithm](https://github.com/YeFeiyangx/grownup_share/tree/master/Basic_Algorithms)
+  - Graphtree;
+  - Shackhands;
+  - Recursion;
+  - Ergodic;
+  - Divide;
+  - Greedy;
+  - Dijkstra;
+  - Some helpful methods provided by Python.
 
 ## Reinforce Learning
 
 Some basic RL examples will be given in this part which contains two implementation methods. One is to build the model completely. The others is with the help of APIs.(PaddleParl, GoogleAgents, etc.) And I will give some tips to tuning the models in my opinions. Thanks for original author's contributions.
 
-- Examples from RL-An-Introduction-Master;
+- [Examples from RL-An-Introduction-Master](https://github.com/YeFeiyangx/grownup_share/tree/master/reinforcement-learning-an-introduction-master);
 - [PaddleParl tutorials](https://github.com/YeFeiyangx/grownup_share/tree/master/PaddleParlExample);
   - [Sarsa_On_Policy](https://github.com/YeFeiyangx/grownup_share/tree/master/PaddleParlExample/01MazeSarsaOnPolicy)
   - [DQN_Off_Policy](https://github.com/YeFeiyangx/grownup_share/tree/master/PaddleParlExample/02MazeQlearningOffPolicy)
@@ -73,6 +74,6 @@ HuaWei Code Example
 
 Provide some analysis examples used by nump, pandas and seaborn.
 
-- Numps tutorials;
-- Seaborn examples;
+- [Numpy tutorials](https://github.com/YeFeiyangx/grownup_share/tree/master/Asist_Tools_Jupyter);
+- [Seaborn examples](https://github.com/YeFeiyangx/grownup_share/tree/master/Asist_Tools_Jupyter);
 - Some analysis cases, like data exploring, data augmentation, etc..
