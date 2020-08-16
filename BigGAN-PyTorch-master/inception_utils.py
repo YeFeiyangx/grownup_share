@@ -10,34 +10,48 @@
     IS/FID code. You *must* use the TF model if you wish to report and compare
     numbers. This code tends to produce IS values that are 5-10% lower than
     those obtained through TF. 
-'''    
+'''
+
 import numpy as np
 from scipy import linalg # For numpy FID
 import time
 
 import torch
+## *** import paddle
 import torch.nn as nn
+## *** import paddle.fluid.layers as dg
+## TODO nn.DataParallel
 import torch.nn.functional as F
+## *** torch.nn.functional == paddle.fluid.layers
 from torch.nn import Parameter as P
 from torchvision.models.inception import inception_v3
+## TODO torchvision
 
 
 # Module that wraps the inception network to enable use with dataparallel and
 # returning pool features and logits.
+## *** paddle.fluid.dygraph.Layer == nn.Module => import paddle.fluid.dygraph as dg => dg.Layer
 class WrapInception(nn.Module):
   def __init__(self, net):
     super(WrapInception,self).__init__()
     self.net = net
+    ## ImageNet自然图像的统计特征，如果是医学或者其它类型的特定领域图像，不应使用该特征对图像进行预处理
+    ## 图片像素减均值，除方差，目的是为了凸显图片信息的特征
+    ## *** paddle.fluid.dygraph.Layer.parameters(include_sublayers=True)
+    ## np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
     self.mean = P(torch.tensor([0.485, 0.456, 0.406]).view(1, -1, 1, 1),
                   requires_grad=False)
+    ## np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
     self.std = P(torch.tensor([0.229, 0.224, 0.225]).view(1, -1, 1, 1),
                  requires_grad=False)
+    
   def forward(self, x):
     # Normalize x
     x = (x + 1.) / 2.0
     x = (x - self.mean) / self.std
     # Upsample if necessary
     if x.shape[2] != 299 or x.shape[3] != 299:
+      ## *** F.interpolate == dg.interpolate
       x = F.interpolate(x, size=(299, 299), mode='bilinear', align_corners=True)
     # 299 x 299 x 3
     x = self.net.Conv2d_1a_3x3(x)
@@ -46,12 +60,14 @@ class WrapInception(nn.Module):
     # 147 x 147 x 32
     x = self.net.Conv2d_2b_3x3(x)
     # 147 x 147 x 64
+    ## *** F.max_pool2d == dg.max_pool2d
     x = F.max_pool2d(x, kernel_size=3, stride=2)
     # 73 x 73 x 64
     x = self.net.Conv2d_3b_1x1(x)
     # 73 x 73 x 80
     x = self.net.Conv2d_4a_3x3(x)
     # 71 x 71 x 192
+    ## *** F.max_pool2d == dg.max_pool2d
     x = F.max_pool2d(x, kernel_size=3, stride=2)
     # 35 x 35 x 192
     x = self.net.Mixed_5b(x)
@@ -77,8 +93,12 @@ class WrapInception(nn.Module):
     # 8 x 8 x 2048
     x = self.net.Mixed_7c(x)
     # 8 x 8 x 2048
+    ## TODO 要查一下这里的尺寸,view相当于reshape array的大小，根据第三维取均值
+    ## *** 根据第1维取均值 np.mean(x.reshape(x.size(0), x.size(1), -1), axis=1)
     pool = torch.mean(x.view(x.size(0), x.size(1), -1), 2)
     # 1 x 1 x 2048
+    ## *** F.dropout == dg.dropout
+    ## TODO fc 应该是最后一层的全链接网络
     logits = self.net.fc(F.dropout(pool, training=False).view(pool.size(0), -1))
     # 1000 (num_classes)
     return pool, logits
@@ -114,6 +134,7 @@ def torch_cov(m, rowvar=False):
         m = m.t()
     # m = m.type(torch.double)  # uncomment this line if desired
     fact = 1.0 / (m.size(1) - 1)
+    ## *** 根据第1维取均值 np.mean(m, axis=1, keepdim=True)
     m -= torch.mean(m, dim=1, keepdim=True)
     mt = m.t()  # if complex: mt = m.t().conj()
     return fact * m.matmul(mt).squeeze()
@@ -128,13 +149,15 @@ def sqrt_newton_schulz(A, numIters, dtype=None):
     batchSize = A.shape[0]
     dim = A.shape[1]
     normA = A.mul(A).sum(dim=1).sum(dim=1).sqrt()
-    Y = A.div(normA.view(batchSize, 1, 1).expand_as(A));
+    Y = A.div(normA.view(batchSize, 1, 1).expand_as(A))
+    ## *** torch.eye == paddle.tensor.eye
     I = torch.eye(dim,dim).view(1, dim, dim).repeat(batchSize,1,1).type(dtype)
     Z = torch.eye(dim,dim).view(1, dim, dim).repeat(batchSize,1,1).type(dtype)
     for i in range(numIters):
       T = 0.5*(3.0*I - Z.bmm(Y))
       Y = Y.bmm(T)
       Z = T.bmm(Z)
+    ## *** torch.sqrt == paddle.tensor.sqrt(x, out=None, name=None)
     sA = Y*torch.sqrt(normA).view(batchSize, 1, 1).expand_as(A)
   return sA
 
@@ -225,7 +248,8 @@ def torch_calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
 
   diff = mu1 - mu2
   # Run 50 itrs of newton-schulz to get the matrix sqrt of sigma1 dot sigma2
-  covmean = sqrt_newton_schulz(sigma1.mm(sigma2).unsqueeze(0), 50).squeeze()  
+  covmean = sqrt_newton_schulz(sigma1.mm(sigma2).unsqueeze(0), 50).squeeze()
+  ## TODO 返回输入矩阵对角线的 迹 之和
   out = (diff.dot(diff) +  torch.trace(sigma1) + torch.trace(sigma2)
          - 2 * torch.trace(covmean))
   return out
@@ -247,13 +271,18 @@ def calculate_inception_score(pred, num_splits=10):
 # Inception Accuracy the labels of the generated class will be needed)
 def accumulate_inception_activations(sample, net, num_inception_images=50000):
   pool, logits, labels = [], [], []
+  ## *** torch.cat == paddle.tensor.concat((input, axis=0, name=None)
   while (torch.cat(logits, 0).shape[0] if len(logits) else 0) < num_inception_images:
+    ## TODO 如下操作不会被更新在对应的记录上
+    ## https://blog.csdn.net/weixin_46559271/article/details/105658654
     with torch.no_grad():
       images, labels_val = sample()
       pool_val, logits_val = net(images.float())
       pool += [pool_val]
+      ## *** F.softmax == dg.softmax
       logits += [F.softmax(logits_val, 1)]
       labels += [labels_val]
+  ## *** torch.cat == paddle.tensor.concat((input, axis=0, name=None)
   return torch.cat(pool, 0), torch.cat(logits, 0), torch.cat(labels, 0)
 
 
@@ -280,6 +309,7 @@ def prepare_inception_metrics(dataset, parallel, no_fid=False):
   data_sigma = np.load(dataset+'_inception_moments.npz')['sigma']
   # Load network
   net = load_inception_net(parallel)
+  ## TODO 可以选择不采用torch进行计算FID use_torch = False
   def get_inception_metrics(sample, num_inception_images, num_splits=10, 
                             prints=True, use_torch=True):
     if prints:
@@ -294,12 +324,14 @@ def prepare_inception_metrics(dataset, parallel, no_fid=False):
       if prints:
         print('Calculating means and covariances...')
       if use_torch:
+        ## TODO 可以选择不采用torch进行计算FID use_torch = False
         mu, sigma = torch.mean(pool, 0), torch_cov(pool, rowvar=False)
       else:
         mu, sigma = np.mean(pool.cpu().numpy(), axis=0), np.cov(pool.cpu().numpy(), rowvar=False)
       if prints:
         print('Covariances calculated, getting FID...')
       if use_torch:
+        ## TODO 可以选择不采用torch进行计算FID
         FID = torch_calculate_frechet_distance(mu, sigma, torch.tensor(data_mu).float().cuda(), torch.tensor(data_sigma).float().cuda())
         FID = float(FID.cpu().numpy())
       else:
