@@ -15,18 +15,32 @@ from tqdm import tqdm, trange
 
 
 import torch
+import paddle
 import torch.nn as nn
+# torch.nn.DataParallel 多个GPU加速
+
+
+## =========================以下无使用=========================
 from torch.nn import init
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.nn import Parameter as P
 import torchvision
+## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 # Import my stuff
 import inception_utils
+## local: inception_utils.prepare_inception_metrics
+
+##  TODO  包括采样，里面工具比较多 
 import utils
+##  这个比较容易，损失函数
 import losses
+
+## training conditional image model
 import train_fns
+
+## TODO 同步的批归一化方法
 from sync_batchnorm import patch_replication_callback
 
 # The main training file. Config is a dictionary specifying the configuration
