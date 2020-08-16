@@ -19,14 +19,20 @@ from argparse import ArgumentParser
 import animal_hash
 
 import torch
+## *** import paddle
 import torch.nn as nn
+## *** import paddle.fluid.layers as dg
 import torch.nn.functional as F
+## *** torch.nn.functional == paddle.fluid.layers
 import torchvision
 import torchvision.transforms as transforms
+## TODO torchvision
 from torch.utils.data import DataLoader
+## TODO torch.utils.data.DataLoader
 
 import datasets as dset
 
+## 参数区域
 def prepare_parser():
   usage = 'Parser for all scripts.'
   parser = ArgumentParser(description=usage)
@@ -478,6 +484,8 @@ class RandomCropLongEdge(object):
     
 # multi-epoch Dataset sampler to avoid memory leakage and enable resumption of
 # training from the same sample regardless of if we stop mid-epoch
+
+## TODO torch.utils.data.Sampler
 class MultiEpochSampler(torch.utils.data.Sampler):
   r"""Samples elements randomly over multiple epochs
 
@@ -506,12 +514,14 @@ class MultiEpochSampler(torch.utils.data.Sampler):
     # Sample all the indices, and then grab the last num_epochs index sets;
     # This ensures if we're starting at epoch 4, we're still grabbing epoch 4's
     # indices
+    ## *** torch.randperm = paddle.fluid.layers.randperm
     out = [torch.randperm(n) for epoch in range(self.num_epochs)][-num_epochs:]
     # Ignore the first start_itr % n indices of the first epoch
     out[0] = out[0][(self.start_itr * self.batch_size % n):]
     # if self.replacement:
       # return iter(torch.randint(high=n, size=(self.num_samples,), dtype=torch.int64).tolist())
     # return iter(.tolist())
+    ## *** torch.cat == paddle.tensor.concat((input, axis=0, name=None)
     output = torch.cat(out).tolist()
     print('Length dataset output is %d' % len(output))
     return iter(output)
@@ -585,6 +595,7 @@ def get_data_loaders(dataset, data_root=None, augment=False, batch_size=64,
 
 # Utility file to seed rngs
 def seed_rng(seed):
+  # TODO 设置随机数种子
   torch.manual_seed(seed)
   torch.cuda.manual_seed(seed)
   np.random.seed(seed)
@@ -611,6 +622,7 @@ def prepare_root(config):
 # Simple wrapper that applies EMA to a model. COuld be better done in 1.0 using
 # the parameters() and buffers() module functions, but for now this works
 # with state_dicts using .copy_
+## TODO How this work?
 class ema(object):
   def __init__(self, source, target, decay=0.9999, start_itr=0):
     self.source = source
@@ -639,17 +651,21 @@ class ema(object):
         self.target_dict[key].data.copy_(self.target_dict[key].data * decay 
                                      + self.source_dict[key].data * (1 - decay))
 
-
+## 正交脚本
 # Apply modified ortho reg to a model
+## 直接计算梯度，而不是计算然后微分损失
 # This function is an optimized version that directly computes the gradient,
 # instead of computing and then differentiating the loss.
 def ortho(model, strength=1e-4, blacklist=[]):
   with torch.no_grad():
     for param in model.parameters():
+      ## 只对部分轴求梯度
       # Only apply this to parameters with at least 2 axes, and not in the blacklist
       if len(param.shape) < 2 or any([param is item for item in blacklist]):
         continue
       w = param.view(param.shape[0], -1)
+      ## *** torch.mm == paddle.tensor.mm(x, y, out=None, name=None) ->Tensor
+      ## *** torch.eye == paddle.tensor.eye
       grad = (2 * torch.mm(torch.mm(w, w.t()) 
               * (1. - torch.eye(w.shape[0], device=w.device)), w))
       param.grad.data += strength * grad.view(param.shape)
@@ -665,6 +681,8 @@ def default_ortho(model, strength=1e-4, blacklist=[]):
       if len(param.shape) < 2 or param in blacklist:
         continue
       w = param.view(param.shape[0], -1)
+      ## *** torch.mm == paddle.tensor.mm(x, y, out=None, name=None) ->Tensor
+      ## *** torch.eye == paddle.tensor.eye
       grad = (2 * torch.mm(torch.mm(w, w.t()) 
                - torch.eye(w.shape[0], device=w.device), w))
       param.grad.data += strength * grad.view(param.shape)
@@ -693,6 +711,7 @@ def save_weights(G, D, state_dict, weights_root, experiment_name,
     print('Saving weights to %s/%s...' % (root, name_suffix))
   else:
     print('Saving weights to %s...' % root)
+  ## TODO save model
   torch.save(G.state_dict(), 
               '%s/%s.pth' % (root, join_strings('_', ['G', name_suffix])))
   torch.save(G.optim.state_dict(), 
@@ -716,6 +735,7 @@ def load_weights(G, D, state_dict, weights_root, experiment_name,
     print('Loading %s weights from %s...' % (name_suffix, root))
   else:
     print('Loading weights from %s...' % root)
+  ## TODO load model
   if G is not None:
     G.load_state_dict(
       torch.load('%s/%s.pth' % (root, join_strings('_', ['G', name_suffix]))),
@@ -741,6 +761,7 @@ def load_weights(G, D, state_dict, weights_root, experiment_name,
 
 ''' MetricsLogger originally stolen from VoxNet source code.
     Used for logging inception metrics'''
+## 日志看似无需求改
 class MetricsLogger(object):
   def __init__(self, fname, reinitialize=False):
     self.fname = fname
@@ -768,6 +789,7 @@ class MetricsLogger(object):
 # 'npz' for output to npz # NOT YET SUPPORTED
 # 'pickle' for output to a python pickle # NOT YET SUPPORTED
 # 'mat' for output to a MATLAB .mat file # NOT YET SUPPORTED
+## 日志看似无需求改
 class MyLogger(object):
   def __init__(self, fname, reinitialize=False, logstyle='%3.3f'):
     self.root = fname
@@ -806,7 +828,7 @@ class MyLogger(object):
         with open('%s/%s.log' % (self.root, arg), 'a') as f:
           f.write('%d: %s\n' % (itr, self.logstyle % kwargs[arg]))
 
-
+## 日志看似无需求改
 # Write some metadata to the logs directory
 def write_metadata(logs_root, experiment_name, config, state_dict):
   with open(('%s/%s/metalog.txt' % 
@@ -823,6 +845,7 @@ Author: Jan Schlüter
 Andy's adds: time elapsed in addition to ETA, makes it possible to add
 estimated time to 1k iters instead of estimated time to completion.
 """
+## TODO 这个很不错预计运行1000次迭代所需要时间，而不是至结束时需要的时间
 def progress(items, desc='', total=None, min_delay=0.1, displaytype='s1k'):
   """
   Returns a generator over `items`, printing the number and percentage of
@@ -860,7 +883,7 @@ def progress(items, desc='', total=None, min_delay=0.1, displaytype='s1k'):
   print("\r%s%d/%d (100.00%%) (took %d:%02d)" % ((desc, total, total) +
                                                    divmod(t_total, 60)))
 
-
+# TODO 采样 nn.parallel.data_parallel和shared对应百度什么方法
 # Sample function for use with inception metrics
 def sample(G, z_, y_, config):
   with torch.no_grad():
@@ -872,7 +895,7 @@ def sample(G, z_, y_, config):
       G_z = G(z_, G.shared(y_))
     return G_z, y_
 
-
+# TODO 采样来干嘛？
 # Sample function for sample sheets
 def sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
                  samples_root, experiment_name, folder_number, z_=None):
@@ -884,11 +907,13 @@ def sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
   # loop over total number of sheets
   for i in range(num_classes // classes_per_sheet):
     ims = []
+    ## TODO torch.arange
     y = torch.arange(i * classes_per_sheet, (i + 1) * classes_per_sheet, device='cuda')
     for j in range(samples_per_class):
       if (z_ is not None) and hasattr(z_, 'sample_') and classes_per_sheet <= z_.size(0):
         z_.sample_()
       else:
+        ## *** torch.randn == paddle.fluid.layers.randn
         z_ = torch.randn(classes_per_sheet, G.dim_z, device='cuda')        
       with torch.no_grad():
         if parallel:
@@ -898,6 +923,7 @@ def sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
 
       ims += [o.data.cpu()]
     # This line should properly unroll the images
+    ## *** torch.stack == paddle.tensor.stack(inputs ,axis=0, out=None, name=None)
     out_ims = torch.stack(ims, 1).view(-1, ims[0].shape[1], ims[0].shape[2], 
                                        ims[0].shape[3]).data.float().cpu()
     # The path for the samples
@@ -909,20 +935,24 @@ def sample_sheet(G, classes_per_sheet, num_classes, samples_per_class, parallel,
 
 # Interp function; expects x0 and x1 to be of shape (shape0, 1, rest_of_shape..)
 def interp(x0, x1, num_midpoints):
+  ## *** torch.linspace == paddle.tensor.linspace(start, end, steps=100, out=None, dtype=None, device=None, stop_gradient=True, name=None)
   lerp = torch.linspace(0, 1.0, num_midpoints + 2, device='cuda').to(x0.dtype)
   return ((x0 * (1 - lerp.view(1, -1, 1))) + (x1 * lerp.view(1, -1, 1)))
 
 
 # interp sheet function
 # Supports full, class-wise and intra-class interpolation
+## TODO 插值 什么时候用？
 def interp_sheet(G, num_per_sheet, num_midpoints, num_classes, parallel,
                  samples_root, experiment_name, folder_number, sheet_number=0,
                  fix_z=False, fix_y=False, device='cuda'):
   # Prepare zs and ys
   if fix_z: # If fix Z, only sample 1 z per row
+    ## *** torch.randn == paddle.fluid.layers.randn
     zs = torch.randn(num_per_sheet, 1, G.dim_z, device=device)
     zs = zs.repeat(1, num_midpoints + 2, 1).view(-1, G.dim_z)
   else:
+    ## *** torch.randn == paddle.fluid.layers.randn
     zs = interp(torch.randn(num_per_sheet, 1, G.dim_z, device=device),
                 torch.randn(num_per_sheet, 1, G.dim_z, device=device),
                 num_midpoints).view(-1, G.dim_z)
@@ -953,6 +983,7 @@ def interp_sheet(G, num_per_sheet, num_midpoints, num_classes, parallel,
 # Convenience debugging function to print out gradnorms and shape from each layer
 # May need to rewrite this so we can actually see which parameter is which
 def print_grad_norms(net):
+    ## *** torch.norm == paddle.tensor.norm(input, p='fro', axis=None, keepdim=False, out=None, dtype=None, name=None)
     gradsums = [[float(torch.norm(param.grad).item()),
                  float(torch.norm(param).item()), param.shape]
                 for param in net.parameters()]
@@ -1036,7 +1067,7 @@ def hashname(name):
 def query_gpu(indices):
   os.system('nvidia-smi -i 0 --query-gpu=memory.free --format=csv')
 
-
+## 计算参数数量
 # Convenience function to count the number of parameters in a module
 def count_parameters(module):
   print('Number of parameters: {}'.format(
@@ -1044,11 +1075,13 @@ def count_parameters(module):
 
    
 # Convenience function to sample an index, not actually a 1-hot
+# TODO 生成一个批次1hot标签
 def sample_1hot(batch_size, num_classes, device='cuda'):
+  ## *** torch.randint == paddle.tensor.randint(low=0,high,size,out=None,dtype=None, device=None,stop_gradient=False, name=None)
   return torch.randint(low=0, high=num_classes, size=(batch_size,),
           device=device, dtype=torch.int64, requires_grad=False)
 
-
+## TODO 从分布中采样 torch.Tensor？
 # A highly simplified convenience class for sampling from distributions
 # One could also use PyTorch's inbuilt distributions package.
 # Note that this class requires initialization to proceed as
@@ -1124,7 +1157,10 @@ def accumulate_standing_stats(net, z, y, nclasses, num_accumulations=16):
 #
 # Note that this calls .float().cuda() on the params.
 import math
+
 from torch.optim.optimizer import Optimizer
+## TODO adam16 自定义的优化算子，不同精度的计算
+
 class Adam16(Optimizer):
   def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8,weight_decay=0):
     defaults = dict(lr=lr, betas=betas, eps=eps,
