@@ -234,6 +234,7 @@ def run(config):
 def main():
   # parse command line and run
   parser = utils.prepare_parser()
+  ## vars() 函数返回对象object的属性和属性值的字典对象。
   config = vars(parser.parse_args())
   print(config)
   run(config)
