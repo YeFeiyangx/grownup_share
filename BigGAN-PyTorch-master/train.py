@@ -233,9 +233,37 @@ def run(config):
 
 def main():
   # parse command line and run
+  # 外部运行主程序入口时候可以输入参数，控制计算模式
   parser = utils.prepare_parser()
+  ## 将parser字典化
+  ## 数据集dataset 默认为 I128_hdf5
+  ## 是否采用数据增强augment 默认为 0
+  ## num_workers 加速数据读取的加载，默认为8， 应小于HDF5 TODO 待查为啥要小于某个数据格式
+  ## no_pin_memory 作者也不确定，暂时不管，默认为FALSE TODO
+  ## shuffle 数据还是需要shuffle，万一数据有聚集BATCH的情况，模型就疯了，默认为True
+  ## load_in_mem 作者也不确定，估计是用来加速数据加载速度的 TODO
+  ## use_multiepoch_sampler 使用多回合采样方法，默认为True，TODO multi-epoch sampler 这个东西一定要研究一下，采样相当重要，这个不知道是啥
+  ## model 默认使用 BigGAN
+  ## G_param 生成模型使用图像归一方法，默认使用谱归一化，还可以选择SVD或者None，TODO 利用代码加深一下SN和SVD的区别
+  ## D_param 判别模型使用图像归一方法，默认使用谱归一化，还可以选择SVD或者None，TODO 利用代码加深一下SN和SVD的区别
+  ## G_ch 生成模型的信道 默认64 TODO 这个是啥？
+  ## D_ch 辨别模型的信道 默认64 TODO 这个是啥？
+  ## G_depth 每个阶段G的resblocks的数量 TODO 盲猜和ResNet结构有关系
+  ## D_depth 每个阶段D的resblocks的数量
+  ## TODO D_thin和D_wide是干啥的？默认都是FALSE
+  ## G_shared TODO Use shared embeddings in G 这个需要细看一下是怎么操作的
+  ## shared_dim TODO 'G''s shared embedding dimensionality; if 0, will be equal to dim_z.
+  ## dim_z 噪声的维度，默认为128
+  ## z_var 噪声的标准差，premiere为1
+  ## hier 这个是使用多层噪声，TODO 需要看一下这个是怎么实现，以及怎么个意思
+  ## cross_replica TODO 这个是啥？把G模型的batchnorm再复制一遍吗
+  ## 使用默认的归一化方法 mybn，看一下为啥
+  ## G_nl&D_nl的激活函数
+  ## G_attn和D_attn是否使用attention机制
+  ## norm_style 使用归一化方法，CNN还是BN比较好
   config = vars(parser.parse_args())
   print(config)
+  ## 将运行字典传入GAN模型主程序
   run(config)
 
 if __name__ == '__main__':
