@@ -12,7 +12,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import copy
-
+#%%
+import numpy as np
 # state A
 STATE_A = 0
 
@@ -48,8 +49,9 @@ STATE_ACTIONS = [[ACTION_A_RIGHT, ACTION_A_LEFT], ACTIONS_B]
 INITIAL_Q = [np.zeros(2), np.zeros(len(ACTIONS_B)), np.zeros(1)]
 
 # set up destination for each state and each action
-TRANSITION = [[STATE_TERMINAL, STATE_B], [STATE_TERMINAL] * len(ACTIONS_B)]
-
+TRANSITION = [[STATE_TERMINAL, STATE_B], [STATE_TERMINAL] * len(ACTIONS_B)] # [[2, 1],[2]]
+TRANSITION
+#%%
 # choose an action based on epsilon greedy algorithm
 def choose_action(state, q_value):
     if np.random.binomial(1, EPSILON) == 1:

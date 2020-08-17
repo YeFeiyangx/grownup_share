@@ -1,0 +1,68 @@
+2020-06-15-18-50-10
+message:create folder './log'
+2020-06-15-18-50-10
+message: goto backward function
+2020-06-15-18-50-10
+data agument strategy : [False, False, False, False, False, False, False, False]
+2020-06-15-18-50-10
+message: begin to initial images path
+2020-06-15-18-50-10
+message:there are 13 pictures in all
+2020-06-15-18-50-10
+message: initialize images path and corresponding labels complete
+2020-06-15-18-55-57
+message: goto backward function
+2020-06-15-18-55-57
+data agument strategy : [False, False, False, False, False, False, False, False]
+2020-06-15-18-55-57
+message: begin to initial images path
+2020-06-15-18-55-57
+message:there are 13 pictures in all
+2020-06-15-18-55-57
+message: initialize images path and corresponding labels complete
+2020-06-15-19-02-04
+message: goto backward function
+2020-06-15-19-02-04
+data agument strategy : [False, False, False, False, False, False, False, False]
+2020-06-15-19-02-04
+message: begin to initial images path
+2020-06-15-19-02-04
+message:there are 13 pictures in all
+2020-06-15-19-02-04
+message: initialize images path and corresponding labels complete
+2020-06-15-19-05-12
+message: goto backward function
+2020-06-15-19-05-12
+data agument strategy : [False, False, False, False, False, False, False, False]
+2020-06-15-19-05-12
+message: begin to initial images path
+2020-06-15-19-05-12
+message:there are 13 pictures in all
+2020-06-15-19-05-12
+message: initialize images path and corresponding labels complete
+2020-06-15-19-06-49
+message: goto backward function
+2020-06-15-19-06-49
+data agument strategy : [False, False, False, False, False, False, False, False]
+2020-06-15-19-06-49
+message: begin to initial images path
+2020-06-15-19-06-49
+message:there are 13 pictures in all
+2020-06-15-19-06-49
+message: initialize images path and corresponding labels complete
+2020-06-15-19-11-25
+message: goto backward function
+2020-06-15-19-11-25
+data agument strategy : [False, False, False, False, False, False, False, False]
+2020-06-15-19-11-25
+message: begin to initial images path
+2020-06-15-19-11-25
+message:there are 13 pictures in all
+2020-06-15-19-11-25
+message: initialize images path and corresponding labels complete
+2020-06-15-19-11-47
+message:configuration lr:'constant', initial lr:0.0002
+2020-06-15-19-11-51
+message: configuration optimizer:'momentum'
+2020-06-15-19-12-41
+message: can not find ckpt model
