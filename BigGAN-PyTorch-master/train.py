@@ -235,9 +235,7 @@ def main():
   # parse command line and run
   # 外部运行主程序入口时候可以输入参数，控制计算模式
   parser = utils.prepare_parser()
-<<<<<<< HEAD
   ## vars() 函数返回对象object的属性和属性值的字典对象。
-=======
   ## 将parser字典化
   ## 数据集dataset 默认为 I128_hdf5
   ## 是否采用数据增强augment 默认为 0
@@ -264,7 +262,6 @@ def main():
   ## G_nl&D_nl的激活函数
   ## G_attn和D_attn是否使用attention机制
   ## norm_style 使用归一化方法，CNN还是BN比较好
->>>>>>> a4a5b0e1271c517492b17e8860b9b264eddbfcef
   config = vars(parser.parse_args())
   print(config)
   ## 将运行字典传入GAN模型主程序
