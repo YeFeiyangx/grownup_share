@@ -1101,6 +1101,7 @@ class Distribution(torch.Tensor):
       self.num_categories = kwargs['num_categories']
 
   def sample_(self):
+    ## *** self.normal_ 应该是继承torch.Tensor的方法
     if self.dist_type == 'normal':
       self.normal_(self.mean, self.var)
     elif self.dist_type == 'categorical':

@@ -79,7 +79,7 @@ def run(config):
   utils.prepare_root(config)
 
   # Setup cudnn.benchmark for free speed
-  ## *** 需要改一下paddle的设置
+  ## @@@ 需要改一下paddle的设置
   torch.backends.cudnn.benchmark = True
 
   # Import the model--this line allows us to dynamically select different files.
@@ -184,21 +184,28 @@ def run(config):
   ## *** 有一部分torch的numpy用法，需要更改一下，获得噪声和标签
   z_, y_ = utils.prepare_z_y(G_batch_size, G.dim_z, config['n_classes'],
                              device=device, fp16=config['G_fp16'])
+
   # Prepare a fixed z & y to see individual sample evolution throghout training
+  ## *** 有一部分torch的numpy用法，需要更改一下，获得噪声和标签
+  ## TODO 获得两份噪声和标签，有社么用意吗？
   fixed_z, fixed_y = utils.prepare_z_y(G_batch_size, G.dim_z,
                                        config['n_classes'], device=device,
-                                       fp16=config['G_fp16'])  
+                                       fp16=config['G_fp16'])
+
+  ## *** 从Distribution中获得采样的方法，可以选择高斯采样和categorical采样
   fixed_z.sample_()
   fixed_y.sample_()
   # Loaders are loaded, prepare the training function
+  ## *** 实例化GAN_training_function训练流程
   if config['which_train_fn'] == 'GAN':
     train = train_fns.GAN_training_function(G, D, GD, z_, y_, 
                                             ema, state_dict, config)
   # Else, assume debugging and use the dummy train fn
+  ## 如果没有指定训练模型，那么就用假训走一下流程Debug
   else:
     train = train_fns.dummy_training_function()
   # Prepare Sample function for use with inception metrics
-  ## 把函数utils.sample中部分入参事先占掉，定义为新的函数sample
+  ## *** 把函数utils.sample中部分入参事先占掉，定义为新的函数sample
   sample = functools.partial(utils.sample,
                               G=(G_ema if config['ema'] and config['use_ema']
                                  else G),
@@ -209,6 +216,8 @@ def run(config):
   for epoch in range(state_dict['epoch'], config['num_epochs']):    
     # Which progressbar to use? TQDM or my own?
     if config['pbar'] == 'mine':
+      ## 这一部分无需翻
+      ## !!! loaders[0] 代表了数据采样对象
       pbar = utils.progress(loaders[0],displaytype='s1k' if config['use_multiepoch_sampler'] else 'eta')
     else:
       pbar = tqdm(loaders[0])
@@ -217,18 +226,23 @@ def run(config):
       state_dict['itr'] += 1
       # Make sure G and D are in training mode, just in case they got set to eval
       # For D, which typically doesn't have BN, this shouldn't matter much.
+      ## *** 继承nn.Module中的train, 对应的是
       G.train()
       D.train()
       if config['ema']:
         G_ema.train()
+      
       if config['D_fp16']:
         x, y = x.to(device).half(), y.to(device)
       else:
         x, y = x.to(device), y.to(device)
+      ## *** 把数据和标签放入训练函数里，train本身有很多需要改写
       metrics = train(x, y)
+      ## 记录日志，把metrics信息都输入日志
       train_log.log(itr=int(state_dict['itr']), **metrics)
       
       # Every sv_log_interval, log singular values
+      ## 记录资格迹的变化日志
       if (config['sv_log_interval'] > 0) and (not (state_dict['itr'] % config['sv_log_interval'])):
         train_log.log(itr=int(state_dict['itr']), 
                       **{**utils.get_SVs(G, 'G'), **utils.get_SVs(D, 'D')})
@@ -240,16 +254,20 @@ def run(config):
                            for key in metrics]), end=' ')
 
       # Save weights and copies as configured at specified interval
+      ## 默认每2000步记录一次结果
       if not (state_dict['itr'] % config['save_every']):
         if config['G_eval_mode']:
           print('Switchin G to eval mode...')
+          ## *** module中的方法
           G.eval()
+          ## 如果采用指数滑动平均
           if config['ema']:
             G_ema.eval()
         train_fns.save_and_sample(G, D, G_ema, z_, y_, fixed_z, fixed_y, 
                                   state_dict, config, experiment_name)
 
       # Test every specified interval
+      ## 默认每5000步测试一次
       if not (state_dict['itr'] % config['test_every']):
         if config['G_eval_mode']:
           print('Switchin G to eval mode...')
@@ -328,11 +346,11 @@ def main():
   ## experiment_name 自定义存储实验名称
   ## config_from_name 是否使用hash实验名
 
-  #@@ EMA 期望最大化网络配置参数
+  #@@ EMA 对权重进行指数滑动平均处理的工具群
   ## ema 是否保存G的ema参数
   ## ema_decay EMA的衰减率
   ## use_ema 是否在G中使用评估
-  ## ema_start 什么时候去更新EMA权重
+  ## ema_start 什么时候去用EMA方法更新权重
 
   #@@ SV stuff 奇异值的迭代性质
   ## adam_eps adam的epsilon value，TODO 看一下它在干嘛

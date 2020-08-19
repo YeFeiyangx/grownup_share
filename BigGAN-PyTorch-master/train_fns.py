@@ -97,10 +97,15 @@ def GAN_training_function(G, D, GD, z_, y_, ema, state_dict, config):
     a set of full conditional sample sheets, and a set of interp sheets. '''
 def save_and_sample(G, D, G_ema, z_, y_, fixed_z, fixed_y, 
                     state_dict, config, experiment_name):
+  """
+  state_dict -> 首次使用时，初始化的统计信息状态
+  """
+  ## 先存权重，每2000迭代存一次
   utils.save_weights(G, D, state_dict, config['weights_root'],
                      experiment_name, None, G_ema if config['ema'] else None)
   # Save an additional copy to mitigate accidental corruption if process
   # is killed during a save (it's happened to me before -.-)
+  ## 不是很明确，为什么存两次权重，这个权重并不会覆盖上一个
   if config['num_save_copies'] > 0:
     utils.save_weights(G, D, state_dict, config['weights_root'],
                        experiment_name,
@@ -109,6 +114,7 @@ def save_and_sample(G, D, G_ema, z_, y_, fixed_z, fixed_y,
     state_dict['save_num'] = (state_dict['save_num'] + 1 ) % config['num_save_copies']
     
   # Use EMA G for samples or non-EMA?
+  ## 建议先不开EMA采样
   which_G = G_ema if config['ema'] and config['use_ema'] else G
   
   # Accumulate standing statistics?

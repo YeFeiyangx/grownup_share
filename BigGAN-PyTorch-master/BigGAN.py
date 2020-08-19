@@ -50,7 +50,7 @@ def G_arch(ch=64, attention='64', ksize='333333', dilation='111111'):
                               for i in range(3,6)}}
 
   return arch
-
+## *** nn.Module == fluid.dygraph.Layer()
 class Generator(nn.Module):
   def __init__(self, G_ch=64, dim_z=128, bottom_width=4, resolution=128,
                G_kernel_size=3, G_attn='64', n_classes=1000,
