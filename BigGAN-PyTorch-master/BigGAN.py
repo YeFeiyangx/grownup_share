@@ -14,10 +14,18 @@ from sync_batchnorm import SynchronizedBatchNorm2d as SyncBatchNorm2d
 
 
 # Architectures for G
+## G 的网络结构，attention表示使用attention结构，分别可以在32或者64使用改结构，书写格式参照英文
 # Attention is passed in in the format '32_64' to mean applying an attention
 # block at both resolution 32x32 and 64x64. Just '64' will apply at 64x64.
 def G_arch(ch=64, attention='64', ksize='333333', dilation='111111'):
   arch = {}
+  """
+  in_channels 输入通道数
+  out_channels 输出通道数
+  upsample 上采样
+  resolution TODO 需要后续了解这个干嘛的
+  attention 注意力机制使用在那些结构
+  """
   arch[512] = {'in_channels' :  [ch * item for item in [16, 16, 8, 8, 4, 2, 1]],
                'out_channels' : [ch * item for item in [16,  8, 8, 4, 2, 1, 1]],
                'upsample' : [True] * 7,
@@ -50,7 +58,7 @@ def G_arch(ch=64, attention='64', ksize='333333', dilation='111111'):
                               for i in range(3,6)}}
 
   return arch
-## *** nn.Module == fluid.dygraph.Layer()
+## *** TODO 需要看一下别人的结构怎么做类继承的 nn.Module == fluid.dygraph.Layer()
 class Generator(nn.Module):
   def __init__(self, G_ch=64, dim_z=128, bottom_width=4, resolution=128,
                G_kernel_size=3, G_attn='64', n_classes=1000,
@@ -63,18 +71,36 @@ class Generator(nn.Module):
                G_init='ortho', skip_init=False, no_optim=False,
                G_param='SN', norm_style='bn',
                **kwargs):
+    """
+    utils中有这些参数的定义，通过parase和vars方法封装这些参数
+    看一下模型到底是咋样
+    G_ch 生成模型的信道 默认64，指的是一种模型机构的总和，64可解析为如下结构
+    ch = 64
+    arch[128] = {'in_channels' :  [ch * item for item in [16, 16, 8, 4, 2]],
+                'out_channels' : [ch * item for item in [16, 8, 4, 2, 1]],
+                'upsample' : [True] * 5,
+                'resolution' : [8, 16, 32, 64, 128],
+                'attention' : {2**i: (2**i in [int(item) for item in attention.split('_')])
+                                for i in range(3,8)}}
+    dim_z 噪声的维度，默认为128
+
+    """
     super(Generator, self).__init__()
     # Channel width mulitplier
     self.ch = G_ch
     # Dimensionality of the latent space
     self.dim_z = dim_z
     # The initial spatial dimensions
+    ## TODO 暂时不理解这个的主要作用
     self.bottom_width = bottom_width
     # Resolution of the output
+    ## 表示选择的结构
     self.resolution = resolution
     # Kernel size?
+    ## TODO 这个不是外部参数导入的, 也么有用到
     self.kernel_size = G_kernel_size
     # Attention?
+    ## 只是做了个中介，转手就到了self.arch中选择，最后会在attention的结构中得到解析
     self.attention = G_attn
     # number of classes, for use in categorical conditional generation
     self.n_classes = n_classes
@@ -99,6 +125,7 @@ class Generator(nn.Module):
     # Epsilon for BatchNorm?
     self.BN_eps = BN_eps
     # Epsilon for Spectral Norm?
+    ## https://zhuanlan.zhihu.com/p/68081406
     self.SN_eps = SN_eps
     # fp16?
     self.fp16 = G_fp16
@@ -131,6 +158,7 @@ class Generator(nn.Module):
       
     # We use a non-spectral-normed embedding here regardless;
     # For some reason applying SN to G's embedding seems to randomly cripple G
+    ## *** fluid.dygraph.Embedding == nn.Embedding
     self.which_embedding = nn.Embedding
     bn_linear = (functools.partial(self.which_linear, bias=False) if self.G_shared
                  else self.which_embedding)
@@ -142,7 +170,6 @@ class Generator(nn.Module):
                                       else self.n_classes),
                           norm_style=self.norm_style,
                           eps=self.BN_eps)
-
 
     # Prepare model
     # If not using shared embeddings, self.shared is just a passthrough

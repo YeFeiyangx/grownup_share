@@ -79,8 +79,9 @@ def run(config):
   utils.prepare_root(config)
 
   # Setup cudnn.benchmark for free speed
-  ## @@@ 需要改一下paddle的设置
-  torch.backends.cudnn.benchmark = True
+  ## @@@ 这里不需要更改，直接注释掉，Paddle不一定需要这个设置
+  ## 用于加速固定网络结构的参数
+  # torch.backends.cudnn.benchmark = True
 
   # Import the model--this line allows us to dynamically select different files.
   ## *** !!! 这个方法很酷哦，直接导入BigGan的model，要看一下BigGAN里面的网络结构配置
@@ -294,8 +295,17 @@ def main():
   ## model 默认使用 BigGAN
   ## G_param 生成模型使用图像归一方法，默认使用谱归一化，还可以选择SVD或者None，TODO 利用代码加深一下SN和SVD的区别
   ## D_param 判别模型使用图像归一方法，默认使用谱归一化，还可以选择SVD或者None，TODO 利用代码加深一下SN和SVD的区别
-  ## G_ch 生成模型的信道 默认64 TODO 这个是啥？
-  ## D_ch 辨别模型的信道 默认64 TODO 这个是啥？
+
+  ## resolution 表示结构代码中的通道数，默认128可解析为如下结构：
+  # G_ch 表示结构代码中的通道数,即ch的值
+  # arch[128] = {'in_channels' :  [ch * item for item in [16, 16, 8, 4, 2]],
+  #             'out_channels' : [ch * item for item in [16, 8, 4, 2, 1]],
+  #             'upsample' : [True] * 5,
+  #             'resolution' : [8, 16, 32, 64, 128],
+  #             'attention' : {2**i: (2**i in [int(item) for item in attention.split('_')])
+  #                             for i in range(3,8)}}
+  ## D_ch 辨别模型的信道 默认64 同上
+
   ## G_depth 每个阶段G的resblocks的数量 TODO 盲猜和ResNet结构有关系
   ## D_depth 每个阶段D的resblocks的数量
   ## TODO D_thin和D_wide是干啥的？默认都是FALSE
@@ -303,15 +313,25 @@ def main():
   ## shared_dim TODO 'G''s shared embedding dimensionality; if 0, will be equal to dim_z.
   ## dim_z 噪声的维度，默认为128
   ## z_var 噪声的标准差，premiere为1
-  ## hier 这个是使用多层噪声，TODO 需要看一下这个是怎么实现，以及怎么个意思
+  ## hier 这个是使用多层噪声
+  # 以arch[64]为例子, 插入的层数 num_slots 为 [16, 16, 8, 4] 的len + 1
+  # 每一块插入的尺寸 z_chunk_size 为 dim_z // num_slots，即把噪声的维度 与 插入层数 取模
+  # z_chunk_size是直接参与前向传播 forward 和 which_bn 应该是决定哪一层使用BatchNormalization
+  # 重塑噪声维度，让其在每一层插入的维度是相同的 dim_z = z_chunk_size * num_slots
+  #~ 如果不使用多层噪声，那么就把 num_slots 的数量置为1
+  # 同时把 z_chunk_size 置于 0
+
   ## cross_replica TODO 这个是啥？把G模型的batchnorm再复制一遍吗
   ## 使用默认的归一化方法 mybn，看一下为啥
   ## G_nl&D_nl的激活函数
   ## G_attn和D_attn是否使用attention机制
   ## norm_style 使用归一化方法，CNN还是使用BN比较好，四者之间的区别可以百度
   ## seed 随机数种子，默认为0，控制初始化参数和数据读取的
-  ## G_init 生成模型初始化方法 TODO !!! 要知晓一下ortho是什么类型的初始化方法
-  ## D_init 判别模型初始化方法 TODO !!! 要知晓一下ortho是什么类型的初始化方法
+  ## G_init 生成模型初始化方法 TODO !!! 要知晓一下ortho是什么类型的初始化方法 使初始化的参数矩阵是正交规范化的
+  # https://zhuanlan.zhihu.com/p/98873800 
+  # 正交规范化的矩阵能够缓解梯度消失和爆炸，具体看BigGAN中的援引文献，
+  # 原为L1范数，BigGAN中使用L2范数进行改进
+  ## D_init 判别模型初始化方法
   ## skip_init 跳过初始化 TODO 为什么跳过初始化，就是ideal的testing？
   ## G_lr 生成模型的学习率
   ## D_lr 辨别模型的学习率
