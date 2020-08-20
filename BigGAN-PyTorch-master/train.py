@@ -5,6 +5,12 @@
     by A. Brock, J. Donahue, and K. Simonyan (arXiv 1809.11096).
 
     Let's go.
+
+The contribution of the BigGAN model is the design decisions for 
+both the models and the training process.
+
+1.Self-Attention Module and Hinge Loss;
+
 """
 
 import os
