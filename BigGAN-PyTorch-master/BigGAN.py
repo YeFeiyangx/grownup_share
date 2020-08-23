@@ -105,6 +105,7 @@ class Generator(nn.Module):
     # number of classes, for use in categorical conditional generation
     self.n_classes = n_classes
     # Use shared embeddings?
+    ## 默认False
     self.G_shared = G_shared
     # Dimensionality of the shared embedding? Unused if not using G_shared
     self.shared_dim = shared_dim if shared_dim > 0 else dim_z
@@ -162,6 +163,7 @@ class Generator(nn.Module):
     self.which_embedding = nn.Embedding
     bn_linear = (functools.partial(self.which_linear, bias=False) if self.G_shared
                  else self.which_embedding)
+    
     self.which_bn = functools.partial(layers.ccbn,
                           which_linear=bn_linear,
                           cross_replica=self.cross_replica,
@@ -215,8 +217,7 @@ class Generator(nn.Module):
     # Set up optimizer
     # If this is an EMA copy, no need for an optim, so just return now
     if no_optim:
-      return
-    self.lr, self.B1, self.B2, self.adam_eps = G_lr, G_B1, G_B2, adam_eps
+      return self.lr, self.B1, self.B2, self.adam_eps = G_lr, G_B1, G_B2, adam_eps
     if G_mixed_precision:
       print('Using fp16 adam in G...')
       import utils

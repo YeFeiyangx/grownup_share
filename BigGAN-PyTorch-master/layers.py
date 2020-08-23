@@ -11,10 +11,14 @@ from torch.nn import Parameter as P
 
 from sync_batchnorm import SynchronizedBatchNorm2d as SyncBN2d
 
+from paddle import fluid
+import paddle.fluid.dygraph as dg
 
 # Projection of x onto y
+## *** torch.mm == fluid.layers.mm
 def proj(x, y):
-  return torch.mm(y, x.t()) * y / torch.mm(y, y.t())
+  # return torch.mm(y, x.t()) * y / torch.mm(y, y.t())
+  return fluid.layers.mm(y, x.t()) * y / fluid.layers.mm(y, y.t())
 
 
 # Orthogonalize x wrt list of vectors ys
@@ -23,29 +27,40 @@ def gram_schmidt(x, ys):
     x = x - proj(x, y)
   return x
 
-
+## *** fluid.layers.matmul == torch.matmul
+## *** fluid.layers.l2_normalize == F.normalize
+## *** torch.no_grad == dg.no_grad
 # Apply num_itrs steps of the power method to estimate top N singular values.
 def power_iteration(W, u_, update=True, eps=1e-12):
   # Lists holding singular vectors and values
   us, vs, svs = [], [], []
   for i, u in enumerate(u_):
     # Run one step of the power iteration
-    with torch.no_grad():
-      v = torch.matmul(u, W)
+    # with torch.no_grad():
+    with dg.no_grad():
+      v = fluid.layers.matmul(u, W)
+      # v = torch.matmul(u, W)
+      
       # Run Gram-Schmidt to subtract components of all other singular vectors
-      v = F.normalize(gram_schmidt(v, vs), eps=eps)
+      v = fluid.layers.l2_normalize(gram_schmidt(v, vs), eps=eps)
       # Add to the list
       vs += [v]
+      
       # Update the other singular vector
-      u = torch.matmul(v, W.t())
+      u = fluid.layers.matmul(v, W.t())
+      # u = torch.matmul(v, W.t())
+      
       # Run Gram-Schmidt to subtract components of all other singular vectors
-      u = F.normalize(gram_schmidt(u, us), eps=eps)
+      u = fluid.layers.l2_normalize(gram_schmidt(u, us), eps=eps)
       # Add to the list
       us += [u]
       if update:
         u_[i][:] = u
     # Compute this singular value and add it to the list
-    svs += [torch.squeeze(torch.matmul(torch.matmul(v, W.t()), u.t()))]
+    ## *** torch.squeeze == fluid.layers.squeeze (input, axes, name=None)
+    svs += [fluid.layers.squeeze(fluid.layers.matmul(fluid.layers.matmul(v, W.t()), u.t()))]
+    # svs += [torch.squeeze(torch.matmul(torch.matmul(v, W.t()), u.t()))]
+    
     #svs += [torch.sum(F.linear(u, W.transpose(0, 1)) * v)]
   return svs, us, vs
 
@@ -57,6 +72,9 @@ class identity(nn.Module):
  
 
 # Spectral normalization base class 
+
+## *** fluid.layers.randn == torch.randn
+## *** fluid.layers.ones == torch.ones
 class SN(object):
   def __init__(self, num_svs, num_itrs, num_outputs, transpose=False, eps=1e-12):
     # Number of power iterations per step
@@ -69,8 +87,8 @@ class SN(object):
     self.eps = eps
     # Register a singular vector for each sv
     for i in range(self.num_svs):
-      self.register_buffer('u%d' % i, torch.randn(1, num_outputs))
-      self.register_buffer('sv%d' % i, torch.ones(1))
+      self.register_buffer('u%d' % i, fluid.layers.randn(1, num_outputs))
+      self.register_buffer('sv%d' % i, fluid.layers.ones(1))
   
   # Singular vectors (u side)
   @property
@@ -93,21 +111,23 @@ class SN(object):
       svs, us, vs = power_iteration(W_mat, self.u, update=self.training, eps=self.eps) 
     # Update the svs
     if self.training:
-      with torch.no_grad(): # Make sure to do this in a no_grad() context or you'll get memory leaks!
+      with dg.no_grad(): # Make sure to do this in a no_grad() context or you'll get memory leaks!
         for i, sv in enumerate(svs):
           self.sv[i][:] = sv     
     return self.weight / svs[0]
 
 
 # 2D Conv layer with spectral norm
-class SNConv2d(nn.Conv2d, SN):
+## *** F.conv2d == 
+class SNConv2d(dg.Conv2d, SN):
   def __init__(self, in_channels, out_channels, kernel_size, stride=1,
              padding=0, dilation=1, groups=1, bias=True, 
              num_svs=1, num_itrs=1, eps=1e-12):
-    nn.Conv2d.__init__(self, in_channels, out_channels, kernel_size, stride, 
+    dg.Conv2d.__init__(self, in_channels, out_channels, kernel_size, stride, 
                      padding, dilation, groups, bias)
     SN.__init__(self, num_svs, num_itrs, out_channels, eps=eps)    
   def forward(self, x):
+    
     return F.conv2d(x, self.W_(), self.bias, self.stride, 
                     self.padding, self.dilation, self.groups)
 
