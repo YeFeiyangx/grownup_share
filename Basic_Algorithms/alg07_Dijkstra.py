@@ -166,6 +166,7 @@ print("P:",P)
 
 
 #%%
+from copy import deepcopy
 """floyd算法"""
 
 def test_floyd_warshall1():
@@ -208,7 +209,7 @@ import time
 import copy
 
 start = time.perf_counter()
-
+inf = float("inf")
 a, b, c, d, e = range(1,6) # One-based
 W0 = {
     a: {c:1, d:7},
@@ -300,16 +301,20 @@ W0 = {
     e: {a:3, b:8, d:-4}
 }
 
-for i in range(16000):
-    W = copy.deepcopy(W0)
-    for u in W:
-        for v in W:
-            if u == v: W[u][v] = 0
-            if v not in W[u]: W[u][v] = inf
-    D, P = floyd_warshall(W)
+W = copy.deepcopy(W0)
+for u in W:
+    for v in W:
+        if u == v: W[u][v] = 0
+        if v not in W[u]: W[u][v] = inf
+D, P = floyd_warshall(W)
 
 end = time.perf_counter()   #结束计时
 print('Running time: %f seconds'%(end-start))  #程序运行时间 2s
+
+#%%
+a = 'OPPAK14，OPPAK05'
+b = set(a)
+b
 
 #%%
 
