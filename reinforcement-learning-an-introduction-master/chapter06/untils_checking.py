@@ -44,3 +44,6 @@ print_optimal_policy(q_table)
 # %%
 q_table[0,9,:]
 # %%
+import paddle.fluid
+paddle.fluid.install_check.run_check()
+# %%
