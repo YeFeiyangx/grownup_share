@@ -129,3 +129,7 @@ test_reward = test_episode(env, agent)
 print('test reward = %.1f' % (test_reward))
 
 agent.save()
+#%%
+import paddle
+paddle.utils.run_check()
+# %%
